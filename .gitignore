@@ -1,0 +1,8 @@
+GoogleSpreadsheetAccess*
+venv
+*.csv
+*.log
+tmp
+cache
+*.pyc
+app.config
