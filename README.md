@@ -12,13 +12,45 @@ Then install the `bitly-story-counts` branch of the [MediaCloud-API repo](https:
 
 Make sure you set up a `GoogleSpreadsheetAccess....json` file with permissions for the spreadsheet.
 
-Copy `app.config.template` to `app.config` and put in your MC api key.
+Now you need to set up a Redis queue somewhere:
+* On OSX you should use [homebrew](http://brew.sh) - `brew install redis`.
+* On Unbuntu, do `apt-get install redis-server` (the config file ends up in `/etc/redis/redis.conf`).
+
+You also need to set up Mongo somewhere, because that is where the results are stored.
+
+Copy `app.config.template` to `app.config` and fill it in with your info.
 
 Running
 -------
 
+There are three pieces here:
+1. first you fetch all the stories that need bitly counts added and dump them into a Redis queue
+2. next you fire up Celery to process that queue and add bitly counts, saving into a Mongo database
+3. run a script that reads the db and writes the combined results into a csv
+Here's instructions for each step.
+
+## 1. Fetching Stories
+
 First export the google permissions: `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess....json`.
 
-Then run the script `python mpc_generate_story_data.py`.
+To fetch all the stories and push them into a Redis queue, run `fetch-stories.py`.  Note that this caches the story results into the `cache` dir, so if you want to start from scratch delete that dir first! You can tail the `fetcher.log` or `mpv_story_urls.csv` to see how it is going.
 
-And you can talk the `.log` or `.csv` that are created to keep an eye on the results.
+As you might guess, this will give you a `mpv_story_urls.csv` that lists all the stories it found.
+
+## 2. Adding Bitly Counts
+
+The stories are all pushed into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mediameter worker -l info`.
+
+## 3. Generating Results
+
+To generate a CSV listing all the results, run `write-results.py`.
+
+Extra Notes
+-----------
+
+If you set up Celery as a [service on Ubuntu](http://celery.readthedocs.org/en/latest/tutorials/daemonizing.html#init-script-celeryd) then you can run `sudo service celeryd start` to start the service:
+* copy the [daemon script](https://raw.githubusercontent.com/ask/celery/master/contrib/generic-init.d/celeryd) to `/etc/init.d/celeryd' and make it executable
+* copy the [example configuration](http://celery.readthedocs.org/en/latest/tutorials/daemonizing.html#example-configuration) to `/etc/default/celeryd` and change the `CELERYD_NODES` name to something you will recognize, change `CELERY_BIN` and `CELERY_CHDIR` to point at your virtualenv, set `CELERYD_LOG_LEVEL= "DEBUG"` if you want more logging
+* create a new unpriveleged celery user: `sudo groupadd celery; sudo useradd -g celery celery`
+
+If you need to empty out all your queues, just `redis-cli flushall`.
