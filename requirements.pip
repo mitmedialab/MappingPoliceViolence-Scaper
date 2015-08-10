@@ -2,5 +2,8 @@ requests[security]
 gspread
 oauth2client
 urllib3
-grequests
 unicodecsv
+redis
+celery
+pymongo
+pypubsub
