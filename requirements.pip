@@ -1,7 +1,6 @@
 requests[security]
 gspread
 oauth2client
-urllib3
 unicodecsv
 redis
 celery
