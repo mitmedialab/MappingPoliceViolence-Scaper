@@ -9,11 +9,8 @@ from mpv import mc, db
 
 log = get_task_logger(__name__)
 
-POST_WRITE_BACK = True
-
 @app.task(serializer='json',bind=True)
 def save_from_id(self,story_id,data_to_save={}):
-    # TODO check in DB to see if story info is already saved
     try:
         story_id = data_to_save['stories_id']
         story_url = data_to_save['url']
