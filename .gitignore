@@ -6,3 +6,6 @@ tmp
 cache
 *.pyc
 app.config
+data/*.csv
+data/*.xls
+data/analysis
