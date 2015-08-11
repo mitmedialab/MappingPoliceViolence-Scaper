@@ -10,7 +10,7 @@ start_time = time.time()
 
 timestr = time.strftime("%Y%m%d_%H%M%S")
 filename = 'mpv_story_data_{0}.csv'.format(timestr)
-filepath = os.path.join(basedir, filename)
+filepath = os.path.join(basedir, "data", filename)
 log.info('Writing data to %s' % filename)
 
 outfile = open(filepath, 'wb')
@@ -30,6 +30,7 @@ for story in db._db.stories.find():
     #outfile.flush()
     idx = idx+1
 
+outfile.close()
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)

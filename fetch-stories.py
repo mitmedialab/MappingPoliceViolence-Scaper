@@ -33,12 +33,17 @@ def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
         worksheet = sh.worksheet(google_worksheet_name)
         all_data = worksheet.get_all_values()
         mpv.cache.put(cache_key,json.dumps(all_data))
-    # Skip header row
     log.info("  loaded %d rows" % len(all_data))
+    # write it to a local csv for inspection and storage
+    outfile = open(os.path.join(basedir,'data','mpv_input_data.csv'), 'wb')
+    outcsv = unicodecsv.writer(outfile,encoding='utf-8')
+    for row in all_data:
+        outcsv.writerow(row)
+    outfile.close()
+    # now return the list of all the data
     iter_data = iter(all_data)
-    next(iter_data)
+    next(iter_data)         # Skip header row
     return iter_data
-data = get_spreadsheet_data(config.get('spreadsheet','url'), config.get('spreadsheet','worksheet'))
 
 def build_mpv_query(row):
     first_name = row[1]
@@ -82,13 +87,24 @@ def fetch_all_stories(solr_query, solr_filter=''):
         mpv.cache.put(cache_key,json.dumps(all_stories))
     return all_stories
 
-# queue up requests to get all the stories for each row od data
-story_url_csv_file = open('mpv_story_urls.csv', 'w')
+# grab the data from the Google spreadsheet
+data = get_spreadsheet_data(config.get('spreadsheet','url'), config.get('spreadsheet','worksheet'))
+
+# set up a csv to record all the story urls
+story_url_csv_file = open(os.path.join(basedir,'data','mpv_story_urls.csv'), 'w')
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'story_date', 'population', 'stories_id', 'url' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_url_csv.writeheader()
 
+# set up a csv to record counts of all the stories per person
+story_count_csv_file = open(os.path.join(basedir,'data','mpv_story_counts.csv'), 'w')
+fieldnames = ['full_name', 'story_count' ]
+story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
+    extrasaction='ignore', encoding='utf-8')
+story_count_csv.writeheader()
+
+# iterate over all the queries grabbing stories and queing a req for bitly counts
 time_spent_querying = 0
 time_spent_queueing = 0
 for row in data:
@@ -121,6 +137,8 @@ for row in data:
     stories = fetch_all_stories(query, date_range)
     query_duration = float(time.time() - query_start)
     time_spent_querying = time_spent_querying + query_duration
+
+    story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
 
     queue_start = time.time()
     queued_stories = 0
