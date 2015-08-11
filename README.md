@@ -37,6 +37,12 @@ To fetch all the stories and push them into a Redis queue, run `fetch-stories.py
 
 As you might guess, this will give you a `mpv_story_urls.csv` that lists all the stories it found.
 
+This will be faster if you add an index to the mpv.stories collection:
+```mongo
+use mpv
+db.accounts.createIndex( { "stories_id": 1 }, { unique: true } )`
+```
+
 ## 2. Adding Bitly Counts
 
 The stories are all pushed into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mediameter worker -l info`.
