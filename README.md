@@ -45,7 +45,7 @@ db.accounts.createIndex( { "stories_id": 1 }, { unique: true } )`
 
 ## 2. Adding Bitly Counts
 
-The stories are all pushed into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mediameter worker -l info`.
+The stories are all pushed into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
 
 ## 3. Generating Results
 
