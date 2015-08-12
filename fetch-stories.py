@@ -125,8 +125,8 @@ for row in data:
         'population': population
     }
 
-    #if data['full_name']!="Akai Gurley":
-    #    continue
+ #   if data['full_name']!="Akai Gurley":
+ #      continue
 
     query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
@@ -151,27 +151,33 @@ for row in data:
         story_data['story_date'] = story['publish_date']
         story_data['story_id'] = story['stories_id']
         story_data['stories_id'] = story['stories_id']
-        story_data['url'] = story['url']
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
         needs_bitly_data = False
         existing_story = db.getStory(story['stories_id'])
         if existing_story is None:
             needs_bitly_data = True
-            db.addStory(story_data)
+            db.addStory(story,story_data)
         else:
-            needs_bitly_data = 'bitly_clicks' not in existing_story
+            if 'bitly_clicks' in existing_story:
+                needs_bitly_data = True
+            else:
+                needs_bitly_data = False
             skipped_stories = skipped_stories + 1
         if needs_bitly_data:
             bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
             if mpv.cache.contains(bitly_cache_key):
                 bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
                 total_click_count = bitly_stats['total_click_count']
-                db.updateStory(story_data, {'bitly_clicks':total_click_count})
-                log.info("  Story %s - %d clicks (from cache)" % (story_id, total_click_count))
+                if existing_story is None:
+                    story_data['bitly_clicks'] = total_click_count
+                    db.addStory(story,story_data)
+                else:
+                    db.updateStory(existing_story, {'bitly_clicks':total_click_count})
+                log.info("  Story %s - %d clicks (from cache)" % (story_data['story_id'], total_click_count))
             else:
                 # story_data['bitly_clicks'] will be filled in by celery task
-                mpv.tasks.save_from_id.delay(story['url'],story_data)   # queue it up for geocoding
+                mpv.tasks.save_from_id.delay(story['stories_id'])   # queue it up for geocoding
                 queued_stories = queued_stories + 1
         else:
             log.debug("  skipping story %s - bitly data already in db" % story['stories_id'])

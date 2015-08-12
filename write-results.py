@@ -1,4 +1,4 @@
-import logging, unicodecsv, time, os, json
+import logging, unicodecsv, time, os, json, sys
 
 from mpv import basedir, db
 
@@ -27,7 +27,7 @@ for story in db._db.stories.find().sort( [['_id', -1]] ):
     if (idx % 1000) == 0:
         log.info("  at story %d" % idx)
     outcsv.writerow(story)
-    #outfile.flush()
+    outfile.flush()
     idx = idx+1
 
 outfile.close()
