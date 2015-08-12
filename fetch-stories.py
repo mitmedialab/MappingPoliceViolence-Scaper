@@ -125,6 +125,9 @@ for row in data:
         'population': population
     }
 
+    #if data['full_name']!="Akai Gurley":
+    #    continue
+
     query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
     query_start = time.time()
@@ -136,13 +139,16 @@ for row in data:
 
     queue_start = time.time()
     queued_stories = 0
-    skipped_stories = 0
-
-    #TODO: remove duplicate stories
+    skipped_stories = 0   
+    duplicate_stories = 0 
+    urls_already_done = []  # build a list of unique urls for de-duping
 
     for story in stories:
-        #if data['full_name']!="Akai Gurley":
-        #    continue
+        if story['url'] in urls_already_done:   # skip duplicate urls that have different story_ids
+            log.warn("  skipping story %s because we've alrady queued that url" % story['stories_id'])
+            duplicate_stories = duplicate_stories + 1
+            continue
+        urls_already_done.append(story['url'])
         story_data = copy.deepcopy(data)
         story_data['story_date'] = story['publish_date']
         story_data['story_id'] = story['stories_id']
@@ -150,16 +156,30 @@ for row in data:
         story_data['url'] = story['url']
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
-        # TODO: stick them into the db here?
-        if not db.storyExists(story['stories_id']):
-            # story_data['bitly_clicks'] will be filled in by celery task
-            mpv.tasks.save_from_id.delay(story['url'],story_data)   # queue it up for geocoding
-            queued_stories = queued_stories + 1
+        needs_bitly_data = False
+        existing_story = db.getStory(story['stories_id'])
+        if existing_story is None:
+            needs_bitly_data = True
+            db.addStory(story_data)
         else:
-            log.debug("  skipping story %s - already in db" % story['stories_id'])
+            needs_bitly_data = 'bitly_clicks' not in existing_story
             skipped_stories = skipped_stories + 1
-    log.info("  queued %d stories" % queued_stories)
-    log.info("  skipped %d stories" % skipped_stories)
+        if needs_bitly_data:
+            bitly_cache_key = story_data['story_id']+"_bitly_stats"
+            if mpv.cache.contains(bitly_cache_key):
+                bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
+                total_click_count = bitly_stats['total_click_count']
+                db.updateStory(story_data, {'bitly_clicks':total_click_count})
+                log.info("  Story %s - %d clicks (from cache)" % (story_id, total_click_count))
+            else:
+                # story_data['bitly_clicks'] will be filled in by celery task
+                mpv.tasks.save_from_id.delay(story['url'],story_data)   # queue it up for geocoding
+                queued_stories = queued_stories + 1
+        else:
+            log.debug("  skipping story %s - bitly data already in db" % story['stories_id'])
+    log.info("  queued %d stories for celery to add bitly counts" % queued_stories)
+    log.info("  skipped %d stories that alreay have bitly counts in db" % skipped_stories)
+    log.info("  skipped %d stories that have duplicate urls" % duplicate_stories)
     queue_duration = float(time.time() - queue_start)
     time_spent_queueing = time_spent_queueing + queue_duration
     
