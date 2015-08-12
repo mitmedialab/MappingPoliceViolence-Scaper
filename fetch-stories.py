@@ -160,9 +160,9 @@ for row in data:
             db.addStory(story,story_data)
         else:
             if 'bitly_clicks' in existing_story:
-                needs_bitly_data = True
-            else:
                 needs_bitly_data = False
+            else:
+                needs_bitly_data = True
             skipped_stories = skipped_stories + 1
         if needs_bitly_data:
             bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
