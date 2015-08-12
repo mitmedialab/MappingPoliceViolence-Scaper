@@ -23,7 +23,7 @@ outcsv.writeheader()
 log.info("Found %d stories" % db.storyCount())
 
 idx = 0
-for story in db._db.stories.find():
+for story in db._db.stories.find().sort( [['_id', -1]] ):
     if (idx % 1000) == 0:
         log.info("  at story %d" % idx)
     outcsv.writerow(story)
