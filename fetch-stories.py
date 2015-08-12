@@ -45,22 +45,16 @@ def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
     next(iter_data)         # Skip header row
     return iter_data
 
-def build_mpv_query(row):
-    first_name = row[1]
-    last_name = row[2]
-    query = '"{0}" AND "{1}"'.format(first_name, last_name)
-    return query
-
 def zi_time(d):
     return datetime.datetime.combine(d, datetime.time.min).isoformat() + "Z"
 
 def build_mpv_daterange(row):
+    # from 5 days before the event, to 2 weeks afterwards
     date_object = datetime.datetime.strptime(row[4], '%Y-%m-%d')
     death_date = zi_time(date_object)
     before_date = date_object - datetime.timedelta(days=5)
     start_date = before_date.strftime('%Y-%m-%d')
     two_weeks_post_death = date_object + datetime.timedelta(days=14)
-
     date_range = 'publish_date:[{0} TO {1}]'.format(zi_time(before_date), zi_time(two_weeks_post_death))
     return date_range
 
@@ -131,7 +125,7 @@ for row in data:
         'population': population
     }
 
-    query = build_mpv_query(row)
+    query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
     query_start = time.time()
     stories = fetch_all_stories(query, date_range)
@@ -143,7 +137,12 @@ for row in data:
     queue_start = time.time()
     queued_stories = 0
     skipped_stories = 0
+
+    #TODO: remove duplicate stories
+
     for story in stories:
+        #if data['full_name']!="Akai Gurley":
+        #    continue
         story_data = copy.deepcopy(data)
         story_data['story_date'] = story['publish_date']
         story_data['story_id'] = story['stories_id']
@@ -151,6 +150,7 @@ for row in data:
         story_data['url'] = story['url']
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
+        # TODO: stick them into the db here?
         if not db.storyExists(story['stories_id']):
             # story_data['bitly_clicks'] will be filled in by celery task
             mpv.tasks.save_from_id.delay(story['url'],story_data)   # queue it up for geocoding

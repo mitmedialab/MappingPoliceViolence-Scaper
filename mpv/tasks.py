@@ -41,7 +41,7 @@ def save_from_id(self,story_id,data_to_save={}):
             log.debug("  url: %s"+story_url)
             if retry:
                 raise self.retry(exc=mce)
-        # TODO: write results to db
+        # TODO: change this to update with the bitly clicks data
         db.addStory(data_to_save, {'bitly_clicks':total_click_count})
     except Exception as e:
         log.exception("Exception - something bad happened")
