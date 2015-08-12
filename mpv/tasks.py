@@ -4,24 +4,29 @@ import json, datetime
 from celery.utils.log import get_task_logger
 
 import mediacloud.api
+import mpv.cache
 from mpv.celery import app
 from mpv import mc, db
 
 log = get_task_logger(__name__)
 
+USE_CACHE = True
+
 @app.task(serializer='json',bind=True)
-def save_from_id(self,story_id,data_to_save={}):
+def save_from_id(self,story_id,story_data={}):
     try:
-        story_id = data_to_save['stories_id']
-        story_url = data_to_save['url']
+        bitly_cache_key = story_data['story_id']+"_bitly_stats"
+        story_id = story_data['stories_id']
+        story_url = story_data['url']
+        total_click_count = None
         now = datetime.datetime.now()
         max_range = datetime.timedelta(days=1000)
         start_ts = (now - max_range).strftime('%s')
         end_ts = datetime.date.today().strftime('%s')
-        total_click_count = None
         retry = False
         try:
             stats = mc.storyBitlyClicks(start_ts, end_ts, stories_id=story_id)
+            mpv.cache.put(bitly_cache_key,json.dumps(stats))
             total_click_count = stats['total_click_count']
             log.info("Story %s - %d clicks" % (story_id, total_click_count))
             log.debug("  url: %s"+story_url)
@@ -41,8 +46,8 @@ def save_from_id(self,story_id,data_to_save={}):
             log.debug("  url: %s"+story_url)
             if retry:
                 raise self.retry(exc=mce)
-        # TODO: change this to update with the bitly clicks data
-        db.addStory(data_to_save, {'bitly_clicks':total_click_count})
+        # add in the bitly data to the record already in the db
+        db.updateStory(story_data, {'bitly_clicks':total_click_count})
     except Exception as e:
         log.exception("Exception - something bad happened")
         raise self.retry(exc=e)
