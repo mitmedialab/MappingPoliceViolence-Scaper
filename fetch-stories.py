@@ -135,8 +135,6 @@ for row in data:
     query_duration = float(time.time() - query_start)
     time_spent_querying = time_spent_querying + query_duration
 
-    story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
-
     queue_start = time.time()
     queued_stories = 0
     skipped_stories = 0   
@@ -145,7 +143,7 @@ for row in data:
 
     for story in stories:
         if story['url'] in urls_already_done:   # skip duplicate urls that have different story_ids
-            log.warn("  skipping story %s because we've alrady queued that url" % story['stories_id'])
+            #log.warn("  skipping story %s because we've alrady queued that url" % story['stories_id'])
             duplicate_stories = duplicate_stories + 1
             continue
         urls_already_done.append(story['url'])
@@ -165,7 +163,7 @@ for row in data:
             needs_bitly_data = 'bitly_clicks' not in existing_story
             skipped_stories = skipped_stories + 1
         if needs_bitly_data:
-            bitly_cache_key = story_data['story_id']+"_bitly_stats"
+            bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
             if mpv.cache.contains(bitly_cache_key):
                 bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
                 total_click_count = bitly_stats['total_click_count']
@@ -177,6 +175,9 @@ for row in data:
                 queued_stories = queued_stories + 1
         else:
             log.debug("  skipping story %s - bitly data already in db" % story['stories_id'])
+
+    story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
+
     log.info("  queued %d stories for celery to add bitly counts" % queued_stories)
     log.info("  skipped %d stories that alreay have bitly counts in db" % skipped_stories)
     log.info("  skipped %d stories that have duplicate urls" % duplicate_stories)
