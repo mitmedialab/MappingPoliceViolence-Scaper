@@ -20,7 +20,7 @@ queued_stories = 0
 for story in db._db.stories.find( { 'bitly_clicks': {'$exists': False} }):
     mpv.tasks.save_from_id.delay(story['stories_id'])
     queued_stories = queued_stories + 1
-    log.debug(".")
+    log.debug("  queued %s"+str(story['stories_id']))
 
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
