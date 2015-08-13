@@ -40,7 +40,7 @@ As you might guess, this will give you a `mpv_story_urls.csv` that lists all the
 This will be faster if you add an index to the mpv.stories collection:
 ```mongo
 use mpv
-db.accounts.createIndex( { "stories_id": 1 }, { unique: true } )`
+db.stories.createIndex( { "stories_id": 1 }, { unique: true } )`
 ```
 
 ## 2. Adding Bitly Counts
