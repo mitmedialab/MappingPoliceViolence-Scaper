@@ -15,7 +15,7 @@ USE_CACHE = True
 @app.task(serializer='json',bind=True)
 def save_from_id(self,story_id):
     try:
-        bitly_cache_key = story_id+"_bitly_stats"
+        bitly_cache_key = str(story_id)+"_bitly_stats"
         story = db.getStory(story_id)
         story_id = story['stories_id']
         story_url = story['url']
