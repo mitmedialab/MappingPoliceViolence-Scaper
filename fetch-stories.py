@@ -125,8 +125,8 @@ for row in data:
         'population': population
     }
 
-    if data['full_name']!="Akai Gurley":
-       continue
+    #if data['full_name']!="Akai Gurley":
+    #   continue
 
     query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
