@@ -9,7 +9,7 @@ import mediacloud, mpv.cache
 from mpv import basedir, config, mc, db
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
+logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.DEBUG)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 start_time = time.time()
@@ -125,8 +125,8 @@ for row in data:
         'population': population
     }
 
- #   if data['full_name']!="Akai Gurley":
- #      continue
+    if data['full_name']!="Akai Gurley":
+       continue
 
     query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
@@ -158,6 +158,7 @@ for row in data:
         if existing_story is None:
             needs_bitly_data = True
             db.addStory(story,story_data)
+            existing_story = db.getStory(story['stories_id'])
         else:
             if 'bitly_clicks' in existing_story:
                 needs_bitly_data = False
@@ -169,12 +170,10 @@ for row in data:
             if mpv.cache.contains(bitly_cache_key):
                 bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
                 total_click_count = bitly_stats['total_click_count']
-                if existing_story is None:
-                    story_data['bitly_clicks'] = total_click_count
-                    db.addStory(story,story_data)
-                else:
-                    story['bitly_clicks'] = total_click_count
-                    db._db.stories.update(story_attributes)
+                log.debug("  updating existing story")
+                new_data = {'bitly_clicks': total_click_count }
+                db._db.stories.update({'_id':existing_story['_id']}, {"$set": new_data})
+                #db.updateStory(story)
                 log.info("  Story %s - %d clicks (from cache)" % (story_data['story_id'], total_click_count))
             else:
                 stories_to_queue = stories_to_queue + 1
@@ -199,7 +198,7 @@ log.info("  took %d seconds to queue" % time_spent_queueing )
 stories_with_data = db._db.stories.find( { 'bitly_clicks': {'$exists': True} }).count();
 stories_needing_data = db._db.stories.find( { 'bitly_clicks': {'$exists': False} }).count();
 
-log.info("There are %d stories total " % db.storyCount())
+log.info("There are %d stories total in the db" % db.storyCount())
 log.info("  %d stories with data" % stories_with_data)
 log.info("  %d stories needing data" % stories_needing_data)
 
