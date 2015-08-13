@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import json, datetime
 
 from celery.utils.log import get_task_logger
+import socialshares
 
 import mediacloud.api
 import mpv.cache
@@ -15,7 +16,7 @@ USE_CACHE = True
 @app.task(serializer='json',bind=True)
 def save_from_id(self,story_id):
     try:
-        bitly_cache_key = str(story_id)+"_bitly_stats"
+        cache_key = str(story_id)+"_bitly_stats"
         story = db.getStory(story_id)
         story_id = story['stories_id']
         story_url = story['url']
@@ -27,7 +28,7 @@ def save_from_id(self,story_id):
         retry = False
         try:
             stats = mc.storyBitlyClicks(start_ts, end_ts, stories_id=story_id)  # MC figure out the right url
-            mpv.cache.put(bitly_cache_key,json.dumps(stats))
+            mpv.cache.put(cache_key,json.dumps(stats))
             total_click_count = stats['total_click_count']
             log.info("Story %s - %d clicks" % (story_id, total_click_count))
             log.debug("  url: %s"+story_url)
@@ -49,6 +50,19 @@ def save_from_id(self,story_id):
                 raise self.retry(exc=mce)
         # add in the bitly data to the record already in the db
         db.updateStory(story, {'bitly_clicks':total_click_count})
+    except Exception as e:
+        log.exception("Exception - something bad happened")
+        raise self.retry(exc=e)
+
+@app.task(serializer='json',bind=True)
+def add_social_shares(self,story_id):
+    try:
+        services = ['facebookfql','facebook','twitter']
+        #cache_key = str(story_id)+"_social_stats"
+        story = db.getStory(story_id)
+        stats = socialshares.fetch(story['url'],services)
+        db.updateStory(story, {'social_shares':stats})
+        #mpv.cache.put(cache_key,json.dumps(stats))
     except Exception as e:
         log.exception("Exception - something bad happened")
         raise self.retry(exc=e)
