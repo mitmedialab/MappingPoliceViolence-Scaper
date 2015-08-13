@@ -5,7 +5,7 @@ import logging, os, sys, time, json, datetime, copy
 import requests, gspread, unicodecsv
 from oauth2client.client import GoogleCredentials
 
-import mediacloud, mpv.cache, mpv.tasks
+import mediacloud, mpv.cache
 from mpv import basedir, config, mc, db
 
 # set up logging
@@ -136,7 +136,7 @@ for row in data:
     time_spent_querying = time_spent_querying + query_duration
 
     queue_start = time.time()
-    queued_stories = 0
+    stories_to_queue = 0
     stories_with_bitly_data = 0   
     duplicate_stories = 0 
     urls_already_done = []  # build a list of unique urls for de-duping
@@ -173,18 +173,17 @@ for row in data:
                     story_data['bitly_clicks'] = total_click_count
                     db.addStory(story,story_data)
                 else:
-                    db.updateStory(existing_story, {'bitly_clicks':total_click_count})
+                    story['bitly_clicks'] = total_click_count
+                    db._db.stories.update(story_attributes)
                 log.info("  Story %s - %d clicks (from cache)" % (story_data['story_id'], total_click_count))
             else:
-                # story_data['bitly_clicks'] will be filled in by celery task
-                mpv.tasks.save_from_id.delay(story['stories_id'])   # queue it up for geocoding
-                queued_stories = queued_stories + 1
+                stories_to_queue = stories_to_queue + 1
         else:
             log.debug("  skipping story %s - bitly data already in db" % story['stories_id'])
 
     story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
 
-    log.info("  queued %d stories for celery to add bitly counts" % queued_stories)
+    log.info("  %d stories need bitly counts" % stories_to_queue)
     log.info("  skipped %d stories that alreay have bitly counts in db" % stories_with_bitly_data)
     log.info("  skipped %d stories that have duplicate urls" % duplicate_stories)
     queue_duration = float(time.time() - queue_start)
@@ -196,3 +195,11 @@ log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
 log.info("  took %d seconds to query" % time_spent_querying )
 log.info("  took %d seconds to queue" % time_spent_queueing )
+
+stories_with_data = db._db.stories.find( { 'bitly_clicks': {'$exists': True} }).count();
+stories_needing_data = db._db.stories.find( { 'bitly_clicks': {'$exists': False} }).count();
+
+log.info("There are %d stories total " % db.storyCount())
+log.info("  %d stories with data" % stories_with_data)
+log.info("  %d stories needing data" % stories_needing_data)
+
