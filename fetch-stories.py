@@ -137,7 +137,7 @@ for row in data:
 
     queue_start = time.time()
     queued_stories = 0
-    skipped_stories = 0   
+    stories_with_bitly_data = 0   
     duplicate_stories = 0 
     urls_already_done = []  # build a list of unique urls for de-duping
 
@@ -161,9 +161,9 @@ for row in data:
         else:
             if 'bitly_clicks' in existing_story:
                 needs_bitly_data = False
+                stories_with_bitly_data = stories_with_bitly_data + 1
             else:
                 needs_bitly_data = True
-            skipped_stories = skipped_stories + 1
         if needs_bitly_data:
             bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
             if mpv.cache.contains(bitly_cache_key):
@@ -185,7 +185,7 @@ for row in data:
     story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
 
     log.info("  queued %d stories for celery to add bitly counts" % queued_stories)
-    log.info("  skipped %d stories that alreay have bitly counts in db" % skipped_stories)
+    log.info("  skipped %d stories that alreay have bitly counts in db" % stories_with_bitly_data)
     log.info("  skipped %d stories that have duplicate urls" % duplicate_stories)
     queue_duration = float(time.time() - queue_start)
     time_spent_queueing = time_spent_queueing + queue_duration
