@@ -35,6 +35,8 @@ def save_from_id(self,story_id):
         except mediacloud.error.MCException as mce:
             if mce.status_code==404:
                 log.debug("Story %s - 404 - No clicks in bitly" % story_id)
+                stats = {'total_click_count':0}
+                mpv.cache.put(cache_key,json.dumps(stats))
                 total_click_count = 0
             elif mce.status_code==429:
                 log.error("Story %s - 429 - Hit the bitly API limit!" % story_id)

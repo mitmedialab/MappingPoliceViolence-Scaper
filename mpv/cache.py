@@ -57,3 +57,7 @@ def put(title,content):
     text_file = codecs.open(os.path.join(cache_dir,key), encoding='utf-8', mode="w")
     text_file.write(content)
     text_file.close()
+
+def remove(title):
+    key = md5_key(title)
+    os.remove(os.path.join(cache_dir,key))
