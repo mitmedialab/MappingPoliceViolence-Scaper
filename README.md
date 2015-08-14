@@ -24,9 +24,10 @@ Running
 -------
 
 There are three pieces here:
-1. first you fetch all the stories that need bitly counts added and dump them into a Redis queue
-2. next you fire up Celery to process that queue and add bitly counts, saving into a Mongo database
-3. run a script that reads the db and writes the combined results into a csv
+1. fetch all the stories and dump them into a Mongo database
+2. grab stories from db needing bitly counts and pass them off to Celery/Redis to add in those counts 
+3. grab stories from db needing facebook/twitter counts and pass them off to Celery/Redis to add in those counts 
+4. run a script that reads the db and writes the combined results into a csv
 Here's instructions for each step.
 
 ## 1. Fetching Stories
@@ -45,9 +46,13 @@ db.stories.createIndex( { "stories_id": 1 }, { unique: true } )`
 
 ## 2. Adding Bitly Counts
 
-The stories are all pushed into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
+Run `python enqueue-stories-needing-bitly.py` to push them into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
 
-## 3. Generating Results
+## 3. Adding Facebook/Twitter counts
+
+Run `python enqueue-stories-needing-social-shares.py` to push them into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
+
+## 4. Generating Results
 
 To generate a CSV listing all the results, run `write-results.py`.
 

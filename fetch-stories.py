@@ -9,7 +9,7 @@ import mediacloud, mpv.cache
 from mpv import basedir, config, mc, db
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 start_time = time.time()
@@ -99,6 +99,8 @@ story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = field
 story_count_csv.writeheader()
 
 # iterate over all the queries grabbing stories and queing a req for bitly counts
+needs_bitly_data = 0
+needs_social_shares = 0
 time_spent_querying = 0
 time_spent_queueing = 0
 for row in data:
@@ -125,8 +127,8 @@ for row in data:
         'population': population
     }
 
-    #if data['full_name']!="Akai Gurley":
-    #   continue
+    if data['full_name']!="Akai Gurley":
+       continue
 
     query = '"{0}" AND "{1}"'.format(first_name, last_name)
     date_range = build_mpv_daterange(row)
@@ -142,49 +144,65 @@ for row in data:
     urls_already_done = []  # build a list of unique urls for de-duping
 
     for story in stories:
-        if story['url'] in urls_already_done:   # skip duplicate urls that have different story_ids
-            #log.warn("  skipping story %s because we've alrady queued that url" % story['stories_id'])
+        # figure out the real url so we can de-duplicate results from MC
+        story['base_url'] = story['url']
+        if '?' in story['base_url']:
+            question_pos = story['base_url'].index('?')
+            story['base_url'] = story['base_url'][:question_pos]
+        if story['base_url'] in urls_already_done:   # skip duplicate urls that have different story_ids
+            log.debug("    skipping story %s because we've alrady queued that url" % story['stories_id'])
             duplicate_stories = duplicate_stories + 1
             continue
-        urls_already_done.append(story['url'])
+        urls_already_done.append(story['base_url'])
+        # now go ahead and save it
         story_data = copy.deepcopy(data)
         story_data['story_date'] = story['publish_date']
         story_data['story_id'] = story['stories_id']
         story_data['stories_id'] = story['stories_id']
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
-        needs_bitly_data = False
+        # now figure out how to save it
         existing_story = db.getStory(story['stories_id'])
+        bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
+        has_bitly_shares = mpv.cache.contains(bitly_cache_key)
+        social_shares_cache_key = str(story_data['story_id'])+"_social_stats"
+        has_social_shares = mpv.cache.contains(social_shares_cache_key)
         if existing_story is None:
-            needs_bitly_data = True
+            if has_bitly_shares:
+                bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
+                story['bitly_clicks'] = bitly_stats['total_click_count']
+            else:
+                needs_bitly_data = needs_bitly_data + 1
+            if has_social_shares:
+                story['social_shares'] = json.loads(mpv.cache.get(social_shares_cache_key))
+            else:
+                needs_social_shares = needs_social_shares + 1
             db.addStory(story,story_data)
             existing_story = db.getStory(story['stories_id'])
         else:
-            if 'bitly_clicks' in existing_story:
-                needs_bitly_data = False
-                stories_with_bitly_data = stories_with_bitly_data + 1
-            else:
-                needs_bitly_data = True
-        if needs_bitly_data:
-            bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
-            if mpv.cache.contains(bitly_cache_key):
-                bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
-                total_click_count = bitly_stats['total_click_count']
-                log.debug("  updating existing story")
-                new_data = {'bitly_clicks': total_click_count }
+            new_data = {}
+            if 'bitly_clicks' not in existing_story:
+                if has_bitly_shares:
+                    bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
+                    new_data['bitly_clicks'] = bitly_stats['total_click_count']
+                else:
+                    needs_bitly_data = needs_bitly_data + 1
+            if 'social_shares' not in existing_story:
+                if has_social_shares:
+                    new_data['social_shares'] = json.loads(mpv.cache.get(social_shares_cache_key))
+                else:
+                    needs_social_shares = needs_social_shares + 1
+            log.debug("    updating existing story")
+            if len(new_data)>0:
                 db._db.stories.update({'_id':existing_story['_id']}, {"$set": new_data})
-                #db.updateStory(story)
-                log.info("  Story %s - %d clicks (from cache)" % (story_data['story_id'], total_click_count))
-            else:
-                stories_to_queue = stories_to_queue + 1
-        else:
-            log.debug("  skipping story %s - bitly data already in db" % story['stories_id'])
+            #db.updateStory(story)
 
-    story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)})
+    story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)-duplicate_stories})
 
-    log.info("  %d stories need bitly counts" % stories_to_queue)
-    log.info("  skipped %d stories that alreay have bitly counts in db" % stories_with_bitly_data)
-    log.info("  skipped %d stories that have duplicate urls" % duplicate_stories)
+    log.info("  Started with %d stories" % len(stories))
+    log.info("    %d stories need bitly counts" % needs_bitly_data)
+    log.info("    %d stories need social shares" % needs_social_shares)
+    log.info("    skipped %d stories that have duplicate urls" % duplicate_stories)
     queue_duration = float(time.time() - queue_start)
     time_spent_queueing = time_spent_queueing + queue_duration
     

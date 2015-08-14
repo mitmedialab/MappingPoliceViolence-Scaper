@@ -58,11 +58,11 @@ def save_from_id(self,story_id):
 def add_social_shares(self,story_id):
     try:
         services = ['facebookfql','facebook','twitter']
-        #cache_key = str(story_id)+"_social_stats"
+        cache_key = str(story_id)+"_social_stats"
         story = db.getStory(story_id)
         stats = socialshares.fetch(story['url'],services)
         db.updateStory(story, {'social_shares':stats})
-        #mpv.cache.put(cache_key,json.dumps(stats))
+        mpv.cache.put(cache_key,json.dumps(stats))
     except Exception as e:
         log.exception("Exception - something bad happened")
         raise self.retry(exc=e)
