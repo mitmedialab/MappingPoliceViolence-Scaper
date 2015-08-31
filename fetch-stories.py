@@ -16,15 +16,14 @@ start_time = time.time()
 requests_logger = logging.getLogger('requests')
 requests_logger.setLevel(logging.WARN)
 
-# now grab the spreadsheet data
-def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
+def _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name):
     cache_key = google_sheets_url+"_"+google_worksheet_name
     all_data = None
     if(mpv.cache.contains(cache_key)):
-        log.info("Loading spreadsheet data from cache")
+        log.info("Loading spreadsheet/"+google_worksheet_name+" from cache")
         all_data = json.loads(mpv.cache.get(cache_key))
     else:
-        log.info("Loading spreadsheet data from url")
+        log.info("Loading spreadsheet/"+google_worksheet_name+" data from url")
         credentials = GoogleCredentials.get_application_default()
         credentials = credentials.create_scoped(['https://spreadsheets.google.com/feeds'])
         gc = gspread.authorize(credentials)
@@ -33,6 +32,11 @@ def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
         worksheet = sh.worksheet(google_worksheet_name)
         all_data = worksheet.get_all_values()
         mpv.cache.put(cache_key,json.dumps(all_data))
+    return all_data
+
+# now grab the spreadsheet data
+def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
+    all_data = _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name)
     log.info("  loaded %d rows" % len(all_data))
     # write it to a local csv for inspection and storage
     outfile = open(os.path.join(basedir,'data','mpv_input_data.csv'), 'wb')
@@ -44,6 +48,20 @@ def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
     iter_data = iter(all_data)
     next(iter_data)         # Skip header row
     return iter_data
+
+def get_query_adjustments(google_sheets_url, google_worksheet_name):
+    all_data = _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name)
+    log.info("  loaded %d rows" % len(all_data))
+    all_data = iter(all_data)
+    next(all_data)
+    adjustment_map = {} # full name to keyword query terms
+    for row in all_data:
+        full_name = row[0]
+        custom_query = row[4]
+        if(len(custom_query)>0):
+            adjustment_map[full_name] = custom_query
+    log.info("  Found %d query keyword adjustments " % len(adjustment_map))
+    return adjustment_map
 
 def zi_time(d):
     return datetime.datetime.combine(d, datetime.time.min).isoformat() + "Z"
@@ -82,7 +100,9 @@ def fetch_all_stories(solr_query, solr_filter=''):
     return all_stories
 
 # grab the data from the Google spreadsheet
-data = get_spreadsheet_data(config.get('spreadsheet','url'), config.get('spreadsheet','worksheet'))
+google_spreadsheet_url = config.get('spreadsheet','url')
+data = get_spreadsheet_data(google_spreadsheet_url, config.get('spreadsheet','worksheet'))
+custom_query_keywords = get_query_adjustments(google_spreadsheet_url, config.get('spreadsheet','query_adjustement_worksheet'))
 
 # set up a csv to record all the story urls
 story_url_csv_file = open(os.path.join(basedir,'data','mpv_story_urls.csv'), 'w')
@@ -127,10 +147,17 @@ for row in data:
         'population': population
     }
 
-    #if data['full_name']!="Akai Gurley":
+    #if data['full_name']!="Victor White III":
     #   continue
 
-    query = '"{0}" AND "{1}"'.format(first_name, last_name)
+    query = ""
+    name_key = data['first_name']+' '+data['last_name']
+    if name_key in custom_query_keywords:
+        log.info("  adjustment: %s -> %s" % (name_key,custom_query_keywords[name_key]))
+        query = custom_query_keywords[name_key]
+    else:
+        query = '"{0}" AND "{1}"'.format(first_name, last_name)
+
     date_range = build_mpv_daterange(row)
     query_start = time.time()
     stories = fetch_all_stories(query, date_range)

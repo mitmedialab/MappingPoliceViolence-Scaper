@@ -3,7 +3,8 @@ key = KEY
 
 [spreadsheet]
 url = URL
-worksheet = Death Details
+worksheet = Death Detail
+query_adjustement_worksheet = Story Counts & Query Adjustmentss
 
 [queue]
 broker_url = redis://localhost:6379/0
