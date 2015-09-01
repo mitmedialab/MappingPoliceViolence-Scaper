@@ -16,7 +16,8 @@ log.info('Writing data to %s' % filename)
 outfile = open(filepath, 'wb')
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 
                 'state', 'cause', 'story_date', 'bitly_clicks', 'population', 'story_id', 'url', 
-                'facebook', 'facebook_comments', 'facebook_likes', 'facebook_shares', 'twitter' ]
+                'facebook', 'facebook_comments', 'facebook_likes', 'facebook_shares', 'twitter', 
+                'resolved_url' ]
 outcsv = unicodecsv.DictWriter(outfile, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 outcsv.writeheader()

@@ -4,9 +4,12 @@ import logging, os, sys, time, json, datetime, copy
 
 import requests, gspread, unicodecsv
 from oauth2client.client import GoogleCredentials
+import hermes.backend.redis
 
-import mediacloud, mpv.cache
+import mediacloud
 from mpv import basedir, config, mc, db
+
+cache = hermes.Hermes(hermes.backend.redis.Backend, ttl=31104000, host='localhost', db=10)
 
 # set up logging
 logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
@@ -17,24 +20,17 @@ requests_logger = logging.getLogger('requests')
 requests_logger.setLevel(logging.WARN)
 
 def _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name):
-    cache_key = google_sheets_url+"_"+google_worksheet_name
     all_data = None
-    if(mpv.cache.contains(cache_key)):
-        log.info("Loading spreadsheet/"+google_worksheet_name+" from cache")
-        all_data = json.loads(mpv.cache.get(cache_key))
-    else:
-        log.info("Loading spreadsheet/"+google_worksheet_name+" data from url")
-        credentials = GoogleCredentials.get_application_default()
-        credentials = credentials.create_scoped(['https://spreadsheets.google.com/feeds'])
-        gc = gspread.authorize(credentials)
-        # Needed to share the document with the app-generated email in the credentials JSON file for discovery/access to work
-        sh = gc.open_by_url(google_sheets_url)
-        worksheet = sh.worksheet(google_worksheet_name)
-        all_data = worksheet.get_all_values()
-        mpv.cache.put(cache_key,json.dumps(all_data))
+    log.info("Loading spreadsheet/"+google_worksheet_name+" data from url")
+    credentials = GoogleCredentials.get_application_default()
+    credentials = credentials.create_scoped(['https://spreadsheets.google.com/feeds'])
+    gc = gspread.authorize(credentials)
+    # Needed to share the document with the app-generated email in the credentials JSON file for discovery/access to work
+    sh = gc.open_by_url(google_sheets_url)
+    worksheet = sh.worksheet(google_worksheet_name)
+    all_data = worksheet.get_all_values()
     return all_data
 
-# now grab the spreadsheet data
 def get_spreadsheet_data(google_sheets_url, google_worksheet_name):
     all_data = _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name)
     log.info("  loaded %d rows" % len(all_data))
@@ -76,27 +72,31 @@ def build_mpv_daterange(row):
     date_range = 'publish_date:[{0} TO {1}]'.format(zi_time(before_date), zi_time(two_weeks_post_death))
     return date_range
 
+@cache
+def resolve_redirects(url):
+    try:
+        r = requests.head(story['url'], allow_redirects=True)
+        return r.url
+    except requests.exceptions.ConnectionError:
+        log.warn("Connection error while trying to resolve url for %s" % story['stories_id'])
+    return url
+
+@cache
 def fetch_all_stories(solr_query, solr_filter=''):
     log.info('Fetching stories for query {0}'.format(solr_query))
-    cache_key = solr_query+"_"+solr_filter
-    if mpv.cache.contains(cache_key):
-        all_stories = json.loads(mpv.cache.get(cache_key))
-        log.info('  Retrieved {0} stories for query {1} (from cache)'.format(len(all_stories), solr_query))
-    else:
-        start = 0
-        offset = 500
-        all_stories = []
-        page = 0
-        while True:
-            stories = mc.storyList(solr_query=solr_query, solr_filter=solr_filter, last_processed_stories_id=start, rows=offset)
-            log.info('  page %d' % page),
-            all_stories.extend(stories)
-            if len(stories) < 1:
-                break
-            start = max([s['processed_stories_id'] for s in stories])
-            page = page + 1
-        log.info('  Retrieved {0} stories for query {1}'.format(len(all_stories), solr_query))
-        mpv.cache.put(cache_key,json.dumps(all_stories))
+    start = 0
+    offset = 500
+    all_stories = []
+    page = 0
+    while True:
+        stories = mc.storyList(solr_query=solr_query, solr_filter=solr_filter, last_processed_stories_id=start, rows=offset)
+        log.info('  page %d' % page),
+        all_stories.extend(stories)
+        if len(stories) < 1:
+            break
+        start = max([s['processed_stories_id'] for s in stories])
+        page = page + 1
+    log.info('  Retrieved {0} stories for query {1}'.format(len(all_stories), solr_query))
     return all_stories
 
 # grab the data from the Google spreadsheet
@@ -119,17 +119,15 @@ story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = field
 story_count_csv.writeheader()
 
 # iterate over all the queries grabbing stories and queing a req for bitly counts
-needs_bitly_data = 0
-needs_social_shares = 0
 time_spent_querying = 0
 time_spent_queueing = 0
 for row in data:
     first_name = row[1]
     last_name = row[2]
-    full_name = row[0].translate({',':None})
-    city = row[6].translate({',':None})
+    full_name = row[0]
+    city = row[6]
     state = row[7]
-    population = row[8].translate({',':None,'*':None})
+    population = row[8]
     cause = row[9]
     sex = row[3]
     date_of_death = row[4]
@@ -146,9 +144,10 @@ for row in data:
         'cause': cause, 
         'population': population
     }
+    log.info("Working on %s" % full_name)
 
-    #if data['full_name']!="Victor White III":
-    #   continue
+    if data['full_name']!="Akai Gurley":
+       continue
 
     query = ""
     name_key = data['first_name']+' '+data['last_name']
@@ -165,22 +164,30 @@ for row in data:
     time_spent_querying = time_spent_querying + query_duration
 
     queue_start = time.time()
-    stories_to_queue = 0
-    stories_with_bitly_data = 0   
     duplicate_stories = 0 
     urls_already_done = []  # build a list of unique urls for de-duping
 
+    log.info("  found %d stories" % len(stories))
     for story in stories:
-        # figure out the real url so we can de-duplicate results from MC
-        story['base_url'] = story['url']
+        # first resolve the url
+        story['resolved_url'] = resolve_redirects(story['url'])
+        if story['resolved_url'] != story['url']:
+            log.debug("  Resolved redirected url for %s" % story['stories_id'])
+        # figure out the base url so we can de-duplicate results from MC
+        story['base_url'] = story['resolved_url']
         if '?' in story['base_url']:
             question_pos = story['base_url'].index('?')
-            story['base_url'] = story['base_url'][:question_pos]
+            story['base_url'] = story['base_url'][:question_pos]        
+        # now skip it if we have done it already
         if story['base_url'] in urls_already_done:   # skip duplicate urls that have different story_ids
             log.debug("    skipping story %s because we've alrady queued that url" % story['stories_id'])
             duplicate_stories = duplicate_stories + 1
             continue
         urls_already_done.append(story['base_url'])
+        # skip if it is in the db already
+        if db.storyExists(story['stories_id']):
+            log.debug("    story in db already %s" % story['stories_id'])
+            continue;
         # now go ahead and save it
         story_data = copy.deepcopy(data)
         story_data['story_date'] = story['publish_date']
@@ -190,45 +197,12 @@ for row in data:
         story_url_csv_file.flush()
         # now figure out how to save it
         existing_story = db.getStory(story['stories_id'])
-        bitly_cache_key = str(story_data['story_id'])+"_bitly_stats"
-        has_bitly_shares = mpv.cache.contains(bitly_cache_key)
-        social_shares_cache_key = str(story_data['story_id'])+"_social_stats"
-        has_social_shares = mpv.cache.contains(social_shares_cache_key)
-        if existing_story is None:
-            if has_bitly_shares:
-                bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
-                story['bitly_clicks'] = bitly_stats['total_click_count']
-            else:
-                needs_bitly_data = needs_bitly_data + 1
-            if has_social_shares:
-                story['social_shares'] = json.loads(mpv.cache.get(social_shares_cache_key))
-            else:
-                needs_social_shares = needs_social_shares + 1
-            db.addStory(story,story_data)
-            existing_story = db.getStory(story['stories_id'])
-        else:
-            new_data = {}
-            if 'bitly_clicks' not in existing_story:
-                if has_bitly_shares:
-                    bitly_stats = json.loads(mpv.cache.get(bitly_cache_key))
-                    new_data['bitly_clicks'] = bitly_stats['total_click_count']
-                else:
-                    needs_bitly_data = needs_bitly_data + 1
-            if 'social_shares' not in existing_story:
-                if has_social_shares:
-                    new_data['social_shares'] = json.loads(mpv.cache.get(social_shares_cache_key))
-                else:
-                    needs_social_shares = needs_social_shares + 1
-            log.debug("    updating existing story")
-            if len(new_data)>0:
-                db._db.stories.update({'_id':existing_story['_id']}, {"$set": new_data})
-            #db.updateStory(story)
+        log.debug("    adding new story %s" % story['stories_id'])
+        db.addStory(story,story_data)
 
     story_count_csv.writerow({'full_name':data['full_name'],'story_count':len(stories)-duplicate_stories})
 
     log.info("  Started with %d stories" % len(stories))
-    log.info("    %d stories need bitly counts" % needs_bitly_data)
-    log.info("    %d stories need social shares" % needs_social_shares)
     log.info("    skipped %d stories that have duplicate urls" % duplicate_stories)
     queue_duration = float(time.time() - queue_start)
     time_spent_queueing = time_spent_queueing + queue_duration
@@ -246,4 +220,3 @@ stories_needing_data = db._db.stories.find( { 'bitly_clicks': {'$exists': False}
 log.info("There are %d stories total in the db" % db.storyCount())
 log.info("  %d stories with data" % stories_with_data)
 log.info("  %d stories needing data" % stories_needing_data)
-
