@@ -78,6 +78,10 @@ def resolve_redirects(url):
         return r.url
     except requests.exceptions.ConnectionError:
         log.warn("Connection error while trying to resolve url for %s" % story['stories_id'])
+    except requests.exceptions.TooManyRedirects:
+        log.warn("Too many redirects for %s" % story['stories_id'])
+    except:
+        log.warn("Some error while tring to resolve url for %s" % story['stories_id'])
     return url
 
 @cache
