@@ -27,6 +27,7 @@ def _get_bitly_clicks(start_ts, end_ts, story_id):
 def _get_social_shares(url):
     services = ['facebookfql','facebook','twitter']
     stats = socialshares.fetch(url,services)
+    return stats
 
 @app.task(serializer='json',bind=True)
 def add_bitly_clicks(self,story_id):
