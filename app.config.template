@@ -10,6 +10,9 @@ query_adjustement_worksheet = Story Counts & Query Adjustmentss
 broker_url = redis://localhost:6379/0
 backend_url = redis://localhost:6379/1
 
+[cache]
+redis_db_number = 10
+
 [db]
 host = 127.0.0.1
 port = 27017

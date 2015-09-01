@@ -4,12 +4,9 @@ import logging, os, sys, time, json, datetime, copy
 
 import requests, gspread, unicodecsv
 from oauth2client.client import GoogleCredentials
-import hermes.backend.redis
 
 import mediacloud
-from mpv import basedir, config, mc, db
-
-cache = hermes.Hermes(hermes.backend.redis.Backend, ttl=31104000, host='localhost', db=10)
+from mpv import basedir, config, mc, db, cache
 
 # set up logging
 logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
@@ -18,6 +15,8 @@ log.info("----------------------------------------------------------------------
 start_time = time.time()
 requests_logger = logging.getLogger('requests')
 requests_logger.setLevel(logging.WARN)
+
+log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
 def _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name):
     all_data = None
