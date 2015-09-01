@@ -145,8 +145,8 @@ for row in data:
     }
     log.info("Working on %s" % full_name)
 
-    if data['full_name']!="Akai Gurley":
-       continue
+    #if data['full_name']!="Akai Gurley":
+    #   continue
 
     query = ""
     name_key = data['first_name']+' '+data['last_name']
