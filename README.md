@@ -64,4 +64,4 @@ If you set up Celery as a [service on Ubuntu](http://celery.readthedocs.org/en/l
 * copy the [example configuration](http://celery.readthedocs.org/en/latest/tutorials/daemonizing.html#example-configuration) to `/etc/default/celeryd` and change the `CELERYD_NODES` name to something you will recognize, change `CELERY_BIN` and `CELERY_CHDIR` to point at your virtualenv, set `CELERYD_LOG_LEVEL= "DEBUG"` if you want more logging
 * create a new unpriveleged celery user: `sudo groupadd celery; sudo useradd -g celery celery`
 
-If you need to empty out all your queues, just `redis-cli flushall`.
+If you need to empty out all your queues, just `redis-cli -n 0 flushdb` (where 0 is the DB number you've set in the `app.config` file).
