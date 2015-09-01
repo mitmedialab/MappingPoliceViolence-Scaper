@@ -6,7 +6,7 @@ import requests, gspread, unicodecsv
 from oauth2client.client import GoogleCredentials
 
 import mediacloud
-from mpv import basedir, config, mc, db
+from mpv import basedir, config, mc, db, cache
 
 # set up logging
 logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
