@@ -18,7 +18,7 @@ log.info("  %d stories needing data" % stories_needing_data)
 
 queued_stories = 0
 for story in db._db.stories.find( { 'bitly_clicks': {'$exists': False} }):
-    mpv.tasks.save_from_id.delay(story['stories_id'])
+    mpv.tasks.add_bitly_clicks.delay(story['stories_id'])
     queued_stories = queued_stories + 1
     log.debug("  queued %s"+str(story['stories_id']))
 
