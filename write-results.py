@@ -24,8 +24,14 @@ outcsv.writeheader()
 
 log.info("Found %d stories" % db.storyCount())
 
+urls_already_done = []
+skipped_story_count = 0
+
 idx = 0
 for story in db._db.stories.find().sort( [['_id', -1]] ):
+    if ('resolved_url' in story) and (story['resolved_url'] in urls_already_done):
+        skipped_story_count = skipped_story_count + 1
+        continue
     if (idx % 1000) == 0:
         log.info("  at story %d" % idx)
     if 'social_shares' in story:
@@ -39,9 +45,11 @@ for story in db._db.stories.find().sort( [['_id', -1]] ):
             story['twitter'] = story['social_shares']['twitter']
     outcsv.writerow(story)
     outfile.flush()
+    urls_already_done.append(story['resolved_url'])
     idx = idx+1
 
 outfile.close()
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
+log.info("  skipped %d stories based on duplicate resolved urls" % skipped_story_count)
