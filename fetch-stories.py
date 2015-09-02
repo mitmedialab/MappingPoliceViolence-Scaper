@@ -72,19 +72,6 @@ def build_mpv_daterange(row):
     return date_range
 
 @cache
-def resolve_redirects(url):
-    try:
-        r = requests.head(story['url'], allow_redirects=True)
-        return r.url
-    except requests.exceptions.ConnectionError:
-        log.warn("Connection error while trying to resolve url for %s" % story['stories_id'])
-    except requests.exceptions.TooManyRedirects:
-        log.warn("Too many redirects for %s" % story['stories_id'])
-    except:
-        log.warn("Some error while tring to resolve url for %s" % story['stories_id'])
-    return url
-
-@cache
 def fetch_all_stories(solr_query, solr_filter=''):
     log.info('Fetching stories for query {0}'.format(solr_query))
     start = 0
@@ -172,12 +159,8 @@ for row in data:
 
     log.info("  found %d stories" % len(stories))
     for story in stories:
-        # first resolve the url
-        story['resolved_url'] = resolve_redirects(story['url'])
-        if story['resolved_url'] != story['url']:
-            log.debug("  Resolved redirected url for %s" % story['stories_id'])
         # figure out the base url so we can de-duplicate results from MC
-        story['base_url'] = story['resolved_url']
+        story['base_url'] = story['url']
         if '?' in story['base_url']:
             question_pos = story['base_url'].index('?')
             story['base_url'] = story['base_url'][:question_pos]        
@@ -217,9 +200,4 @@ log.info("  took %d seconds total" % duration_secs)
 log.info("  took %d seconds to query" % time_spent_querying )
 log.info("  took %d seconds to queue" % time_spent_queueing )
 
-stories_with_data = db._db.stories.find( { 'bitly_clicks': {'$exists': True} }).count();
-stories_needing_data = db._db.stories.find( { 'bitly_clicks': {'$exists': False} }).count();
-
 log.info("There are %d stories total in the db" % db.storyCount())
-log.info("  %d stories with data" % stories_with_data)
-log.info("  %d stories needing data" % stories_needing_data)
