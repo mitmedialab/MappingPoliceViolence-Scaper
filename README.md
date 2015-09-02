@@ -44,13 +44,15 @@ use mpv
 db.stories.createIndex( { "stories_id": 1 }, { unique: true } )`
 ```
 
-## 2. Adding Bitly Counts
+## 2. Adding Extra Info
 
-Run `python enqueue-stories-needing-bitly.py` to push them into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
+We want to add three extra pieces of information:
 
-## 3. Adding Facebook/Twitter counts
+1. bitly counts: `python enqueue-stories-needing-bitly.py`
+2. facebook/twitter shares: `python enqueue-stories-needing-social-shares.py` 
+3. resolved urls to de-duplicate: `python enqueue-stories-needing-resolved-url.py` 
 
-Run `python enqueue-stories-needing-social-shares.py` to push them into a Redis queue, which is polled by Celery to a pool of workers that query MC for the bitly counts.  Start the Celery worker like this: `celery -A mpv worker -l info`.
+Running each of those scripts will queue up taks in the celery queue for parallel procesing.  Start that off by running celery like this: `celery -A mpv worker -l info`.
 
 ## 4. Generating Results
 
