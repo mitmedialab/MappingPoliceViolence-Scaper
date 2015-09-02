@@ -7,4 +7,4 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 
-mpv.extender.enqueue_tasks('social_shares','add_social_shares')
+mpv.extender.enqueue_tasks('resolved_url','add_resolved_url')
