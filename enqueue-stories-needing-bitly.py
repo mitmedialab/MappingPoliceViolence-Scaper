@@ -1,3 +1,5 @@
+import logging
+
 import mpv.extender
 
 # set up logging
