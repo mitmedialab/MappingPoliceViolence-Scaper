@@ -24,13 +24,14 @@ Running
 -------
 
 There are three pieces here:
+
 1. fetch all the stories and dump them into a Mongo database
-2. grab stories from db needing bitly counts and pass them off to Celery/Redis to add in those counts 
-3. grab stories from db needing facebook/twitter counts and pass them off to Celery/Redis to add in those counts 
+2. adding extra info (resolving url, social shares, etc) via Celery/Redis
 4. run a script that reads the db and writes the combined results into a csv
+
 Here's instructions for each step.
 
-## 1. Fetching Stories
+### 1. Fetching Stories
 
 First export the google permissions: `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess....json`.
 
@@ -44,7 +45,7 @@ use mpv
 db.stories.createIndex( { "stories_id": 1 }, { unique: true } )`
 ```
 
-## 2. Adding Extra Info
+### 2. Adding Extra Info
 
 We want to add three extra pieces of information:
 
@@ -54,7 +55,7 @@ We want to add three extra pieces of information:
 
 Running each of those scripts will queue up taks in the celery queue for parallel procesing.  Start that off by running celery like this: `celery -A mpv worker -l info`.
 
-## 4. Generating Results
+### 3. Generating Results
 
 To generate a CSV listing all the results, run `write-results.py`.
 
