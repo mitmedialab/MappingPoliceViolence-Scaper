@@ -15,6 +15,8 @@ log.info("----------------------------------------------------------------------
 start_time = time.time()
 requests_logger = logging.getLogger('requests')
 requests_logger.setLevel(logging.WARN)
+#mc_logger = logging.getLogger('mediacloud')
+#mc_logger.setLevel(logging.DEBUG)
 
 log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
@@ -68,10 +70,10 @@ def build_mpv_daterange(row):
     before_date = date_object - datetime.timedelta(days=5)
     start_date = before_date.strftime('%Y-%m-%d')
     two_weeks_post_death = date_object + datetime.timedelta(days=14)
-    date_range = 'publish_date:[{0} TO {1}]'.format(zi_time(before_date), zi_time(two_weeks_post_death))
+    date_range = '(publish_date:[{0} TO {1}])'.format(zi_time(before_date), zi_time(two_weeks_post_death))
     return date_range
 
-@cache
+#@cache
 def fetch_all_stories(solr_query, solr_filter=''):
     log.info('Fetching stories for query {0}'.format(solr_query))
     start = 0
@@ -79,6 +81,7 @@ def fetch_all_stories(solr_query, solr_filter=''):
     all_stories = []
     page = 0
     while True:
+        log.debug("  querying for %s | %s" % (solr_query,solr_filter))
         stories = mc.storyList(solr_query=solr_query, solr_filter=solr_filter, last_processed_stories_id=start, rows=offset)
         log.info('  page %d' % page),
         all_stories.extend(stories)
@@ -147,11 +150,16 @@ for row in data:
     else:
         query = '"{0}" AND "{1}"'.format(first_name, last_name)
 
-    date_range = build_mpv_daterange(row)
+
+    # in the right date range
+    # just US MSM, regional, and partisan
+    # but not spidered ones
+    query_filter = build_mpv_daterange(row) + " AND (tags_id_media:(8875027 2453107 129 8878292 8878293 8878294)) " + " AND NOT (tags_id_stories:8875452) " 
     query_start = time.time()
-    stories = fetch_all_stories(query, date_range)
+    stories = fetch_all_stories(query, query_filter)
     query_duration = float(time.time() - query_start)
     time_spent_querying = time_spent_querying + query_duration
+    sys.exit()
 
     queue_start = time.time()
     duplicate_stories = 0 
