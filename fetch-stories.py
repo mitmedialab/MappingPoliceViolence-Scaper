@@ -159,7 +159,6 @@ for row in data:
     stories = fetch_all_stories(query, query_filter)
     query_duration = float(time.time() - query_start)
     time_spent_querying = time_spent_querying + query_duration
-    sys.exit()
 
     queue_start = time.time()
     duplicate_stories = 0 
