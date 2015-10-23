@@ -9,14 +9,14 @@ import mediacloud
 from mpv import basedir, config, mc, db, cache
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.INFO)
+logging.basicConfig(filename=os.path.join(basedir,'fetcher.log'),level=logging.DEBUG)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 start_time = time.time()
 requests_logger = logging.getLogger('requests')
-requests_logger.setLevel(logging.WARN)
-#mc_logger = logging.getLogger('mediacloud')
-#mc_logger.setLevel(logging.DEBUG)
+requests_logger.setLevel(logging.DEBUG)
+mc_logger = logging.getLogger('mediacloud')
+mc_logger.setLevel(logging.DEBUG)
 
 log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
@@ -112,6 +112,7 @@ story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = field
 story_count_csv.writeheader()
 
 # iterate over all the queries grabbing stories and queing a req for bitly counts
+queries = []
 time_spent_querying = 0
 time_spent_queueing = 0
 for row in data:
@@ -151,10 +152,14 @@ for row in data:
         query = '"{0}" AND "{1}"'.format(first_name, last_name)
 
 
-    # in the right date range
-    # just US MSM, regional, and partisan
-    # but not spidered ones
-    query_filter = build_mpv_daterange(row) + " AND (tags_id_media:(8875027 2453107 129 8878292 8878293 8878294)) " + " AND NOT (tags_id_stories:8875452) " 
+    # a) limit query to correct date range only
+    # query_filter = build_mpv_daterange(row)
+    # b) also limit query to us media sources (msm, regional, partisan sets)
+    query_filter = build_mpv_daterange(row) + " AND (tags_id_media:(8875027 2453107 129 8878292 8878293 8878294)) "
+    # c) also limit query to non-spidered us media sources (msm, regional, partisan sets)
+    # query_filter = build_mpv_daterange(row) + " AND (tags_id_media:(8875027 2453107 129 8878292 8878293 8878294)) " + " AND NOT (tags_id_stories:8875452) " 
+    queries.append("("+query+" AND "+query_filter+")")
+
     query_start = time.time()
     stories = fetch_all_stories(query, query_filter)
     query_duration = float(time.time() - query_start)
@@ -200,6 +205,9 @@ for row in data:
     queue_duration = float(time.time() - queue_start)
     time_spent_queueing = time_spent_queueing + queue_duration
     
+log.info("Giant combined query is:")
+log.info(" OR ".join(queries))
+
 # log some stats about the run
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
