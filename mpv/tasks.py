@@ -10,7 +10,6 @@ from mpv import mc, db, cache
 
 log = get_task_logger(__name__)
 
-@cache
 def _get_resolved_url(url):
     try:
         r = requests.head(url, allow_redirects=True)
@@ -21,7 +20,6 @@ def _get_resolved_url(url):
         log.warn("Too many redirects for %s" % url)
     return url
 
-@cache
 def _get_bitly_clicks(start_ts, end_ts, story_id):
     try:
         stats = mc.storyBitlyClicks(start_ts, end_ts, stories_id=story_id)  # MC will figure out the right url
@@ -34,7 +32,6 @@ def _get_bitly_clicks(start_ts, end_ts, story_id):
         else:
             raise mce
 
-@cache
 def _get_social_shares(url):
     services = ['facebookfql','facebook','twitter']
     stats = socialshares.fetch(url,services)
