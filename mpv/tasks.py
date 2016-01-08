@@ -33,7 +33,7 @@ def _get_bitly_clicks(start_ts, end_ts, story_id):
             raise mce
 
 def _get_social_shares(url):
-    services = ['facebookfql','facebook','twitter']
+    services = ['facebookfql','facebook']
     stats = socialshares.fetch(url,services)
     return stats
 
@@ -92,7 +92,8 @@ def add_social_shares(self,story_id):
     try:
         story = db.getStory(story_id)
         stats = _get_social_shares(story['url'])
-        db.updateStory(story, {'social_shares':stats})
+        if stats is not None and len(stats)>0:
+            db.updateStory(story, {'social_shares':stats})
     except Exception as e:
         log.exception("Exception - something bad happened")
         raise self.retry(exc=e)
