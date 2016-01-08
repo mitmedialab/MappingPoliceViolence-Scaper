@@ -43,7 +43,8 @@ for story in db._db.stories.find().sort( [['_id', -1]] ):
             story['facebook_shares'] = story['social_shares']['facebookfql']['shares']
     outcsv.writerow(story)
     outfile.flush()
-    urls_already_done.append(story['resolved_url'])
+    if 'resolved_url' in story:
+        urls_already_done.append(story['resolved_url'])
     idx = idx+1
 
 outfile.close()
