@@ -16,7 +16,7 @@ log.info('Writing data to %s' % filename)
 outfile = open(filepath, 'wb')
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 
                 'state', 'cause', 'story_date', 'bitly_clicks', 'population', 'story_id', 'url', 
-                'facebook', 'facebook_comments', 'facebook_likes', 'facebook_shares', 'twitter', 
+                'facebook', 'facebook_comments', 'facebook_likes', 'facebook_shares', 
                 'resolved_url' ]
 outcsv = unicodecsv.DictWriter(outfile, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
@@ -41,8 +41,6 @@ for story in db._db.stories.find().sort( [['_id', -1]] ):
             story['facebook_comments'] = story['social_shares']['facebookfql']['comments']
             story['facebook_likes'] = story['social_shares']['facebookfql']['likes']
             story['facebook_shares'] = story['social_shares']['facebookfql']['shares']
-        if 'twitter' in story['social_shares']:
-            story['twitter'] = story['social_shares']['twitter']
     outcsv.writerow(story)
     outfile.flush()
     urls_already_done.append(story['resolved_url'])
