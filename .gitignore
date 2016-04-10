@@ -8,4 +8,5 @@ cache
 app.config
 data/*.csv
 data/*.xls
-data/analysis
+data/*.xlsx
+data/old
