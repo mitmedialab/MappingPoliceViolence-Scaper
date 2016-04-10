@@ -20,7 +20,7 @@ custom_query_keywords = incidents.get_query_adjustments()
 
 # set up a csv to record all the story urls
 story_count_csv_file = open(os.path.join(basedir,'data','mpv-total-story-counts.csv'), 'w')
-fieldnames = ['full_name', 'total_stories', 'stories_about_person', 'normalized_stories_about_person', 'query', 'filter' ]
+fieldnames = ['full_name', 'date_of_death', 'total_stories', 'stories_about_person', 'normalized_stories_about_person', 'query', 'filter' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_count_csv.writeheader()
@@ -51,6 +51,7 @@ for person in data:
     
     data = {}
     data['full_name'] = name_key
+    data['date_of_death'] = person['date_of_death']
     data['total_stories'] = count_stories('*',query_filter)
     data['stories_about_person'] = count_stories(query,query_filter)
     normalized_story_count = float(data['stories_about_person']) / float(data['total_stories'])
