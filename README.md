@@ -1,70 +1,32 @@
 Mapping Police Violence Scraper
 ===============================
 
-Script to pull in articles and bitly counts realted to our Mapping Police Violence study.
+Script to aggregate data from our investigation with Black Lives Matter into Police Violence in 2014.
 
 Installation
 ------------
 
 First install the dependences: `pip install -r requirements.pip`
 
-Then install the `bitly-story-counts` branch of the [MediaCloud-API repo](https://github.com/c4fcm/MediaCloud-API-Client/tree/bitly-story-counts).
-
 Make sure you set up a `GoogleSpreadsheetAccess....json` file with permissions for the spreadsheet.
-
-Now you need to set up a Redis queue somewhere:
-* On OSX you should use [homebrew](http://brew.sh) - `brew install redis`.
-* On Unbuntu, do `apt-get install redis-server` (the config file ends up in `/etc/redis/redis.conf`).
-
-You also need to set up Mongo somewhere, because that is where the results are stored.
 
 Copy `app.config.template` to `app.config` and fill it in with your info.
 
 Running
 -------
 
-There are three pieces here:
+### Generating Story Counts and Seed Query
 
-1. fetch all the stories and dump them into a Mongo database
-2. adding extra info (resolving url, social shares, etc) via Celery/Redis
-4. run a script that reads the db and writes the combined results into a csv
+Run `count-story-totals.py` to create `data/mpv-total-story-counts.csv`.  This file inclues a list of:
+ * each victim's name
+ * the total number of stories published from the sources in the time period
+ * the number of stories from the sources that were about the victim in the time period
+ * the normalized number of stories from the sources that were about the victim in the time period
+ * the query terms that specified the victim's name
+ * the query filter that was used to specify the sources and the time period
 
-Here's instructions for each step.
+It also logs a giant combined query that we used to create the unspidered controversy.  This took about 10 minutes on my laptop.
 
-### 1. Fetching Stories
+### Listing Stories
 
-First export the google permissions: `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess....json`.
-
-To fetch all the stories and push them into a Redis queue, run `fetch-stories.py`.  Note that this caches the story results into the `cache` dir, so if you want to start from scratch delete that dir first! You can tail the `fetcher.log` or `mpv_story_urls.csv` to see how it is going.
-
-As you might guess, this will give you a `mpv_story_urls.csv` that lists all the stories it found.
-
-This will be faster if you add an index to the mpv.stories collection:
-```mongo
-use mpv
-db.stories.createIndex( { "stories_id": 1 }, { unique: true } )`
-```
-
-### 2. Adding Extra Info
-
-We want to add three extra pieces of information:
-
-1. bitly counts: `python enqueue-stories-needing-bitly.py`
-2. facebook/twitter shares: `python enqueue-stories-needing-social-shares.py` 
-3. resolved urls to de-duplicate: `python enqueue-stories-needing-resolved-url.py` 
-
-Running each of those scripts will queue up taks in the celery queue for parallel procesing.  Start that off by running celery like this: `celery -A mpv worker -l info`.
-
-### 3. Generating Results
-
-To generate a CSV listing all the results, run `write-results.py`.
-
-Extra Notes
------------
-
-If you set up Celery as a [service on Ubuntu](http://celery.readthedocs.org/en/latest/tutorials/daemonizing.html#init-script-celeryd) then you can run `sudo service celeryd start` to start the service:
-* copy the [daemon script](https://raw.githubusercontent.com/ask/celery/master/contrib/generic-init.d/celeryd) to `/etc/init.d/celeryd' and make it executable
-* copy the [example configuration](http://celery.readthedocs.org/en/latest/tutorials/daemonizing.html#example-configuration) to `/etc/default/celeryd` and change the `CELERYD_NODES` name to something you will recognize, change `CELERY_BIN` and `CELERY_CHDIR` to point at your virtualenv, set `CELERYD_LOG_LEVEL= "DEBUG"` if you want more logging
-* create a new unpriveleged celery user: `sudo groupadd celery; sudo useradd -g celery celery`
-
-If you need to empty out all your queues, just `redis-cli -n 0 flushdb` (where 0 is the DB number you've set in the `app.config` file).
+Run `list-all-stories.py` to generate a list of all the stories in the controversy we created (`data/mpv-controvery-stories.csv`).

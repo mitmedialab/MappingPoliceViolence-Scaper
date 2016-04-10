@@ -1,25 +1,21 @@
 # `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess-be765243bfb4.json`
-
 import logging, os, sys, time, json, datetime, copy
-
 import requests, gspread, unicodecsv
-from oauth2client.client import GoogleCredentials
-
 import mediacloud
-from mpv import basedir, config, mc, db, cache, incidents
+from mpv import basedir, config, mc, cache, incidents
 from mpv.util import build_mpv_daterange
 
 CONTROVERSY_ID = config.get('mediacloud','controversy_id')
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'logs','fetcher.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(basedir,'logs','list-all-stories.log'),level=logging.DEBUG)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 start_time = time.time()
 requests_logger = logging.getLogger('requests')
-requests_logger.setLevel(logging.WARN)
+requests_logger.setLevel(logging.INFO)
 mc_logger = logging.getLogger('mediacloud')
-mc_logger.setLevel(logging.WARN)
+mc_logger.setLevel(logging.INFO)
 
 log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
@@ -51,14 +47,15 @@ def fetch_all_stories(solr_query, solr_filter=''):
     return all_stories
 
 # set up a csv to record all the story urls
-story_url_csv_file = open(os.path.join(basedir,'data','mpv_story_urls.csv'), 'w')
-fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'story_date', 'population', 'stories_id', 'url' ]
+story_url_csv_file = open(os.path.join(basedir,'data','mpv-controversy-stories.csv'), 'w')
+fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
+              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'url' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_url_csv.writeheader()
 
 # set up a csv to record counts of all the stories per person
-story_count_csv_file = open(os.path.join(basedir,'data','mpv_story_counts.csv'), 'w')
+story_count_csv_file = open(os.path.join(basedir,'data','mpv-controversy-story-counts.csv'), 'w')
 fieldnames = ['full_name', 'story_count' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
@@ -112,13 +109,16 @@ for person in data:
         # now go ahead and save it
         story_data = copy.deepcopy(person)
         story_data['story_date'] = story['publish_date']
-        story_data['story_id'] = story['stories_id']
         story_data['stories_id'] = story['stories_id']
+        story_data['url'] = story['url']
+        story_data['bitly_click_count'] = story['bitly_click_count']
+        story_data['media_id'] = story['media_id']
+        story_data['media_name'] = story['media_name']
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
         # now figure out how to save it
         #existing_story = db.getStory(story['stories_id'])
-        log.debug("    adding story %s" % story['stories_id'])
+        log.debug("    found story %s" % story['stories_id'])
         #db.addStory(story,story_data)
 
     story_count_csv.writerow({'full_name':person['full_name'],'story_count':len(stories)-duplicate_stories})

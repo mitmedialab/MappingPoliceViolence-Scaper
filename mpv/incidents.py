@@ -23,7 +23,7 @@ def _get_spreadsheet_data(google_sheets_url, google_worksheet_name):
     all_data = _get_spreadsheet_worksheet(google_sheets_url, google_worksheet_name)
     log.info("  loaded %d rows" % len(all_data))
     # write it to a local csv for inspection and storage
-    outfile = open(os.path.join(basedir,'data','mpv_input_data.csv'), 'wb')
+    outfile = open(os.path.join(basedir,'data','mpv-input-data.csv'), 'wb')
     outcsv = unicodecsv.writer(outfile,encoding='utf-8')
     for row in all_data:
         outcsv.writerow(row)
