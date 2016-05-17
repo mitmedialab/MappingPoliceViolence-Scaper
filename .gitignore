@@ -10,3 +10,4 @@ data/*.csv
 data/*.xls
 data/*.xlsx
 data/old
+data/*.txt

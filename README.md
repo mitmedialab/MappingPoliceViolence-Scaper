@@ -25,7 +25,7 @@ Run `count-story-totals.py` to create `data/mpv-total-story-counts.csv`.  This f
  * the query terms that specified the victim's name
  * the query filter that was used to specify the sources and the time period
 
-It also logs a giant combined query that we used to create the unspidered controversy.  This took about 10 minutes on my laptop.
+It writes giant combined queries to files in `data`, which we used to create the unspidered controversy.  This took about 10 minutes on my laptop.
 
 ### Listing Stories
 
