@@ -18,7 +18,7 @@ MPV codes victims as "unarmed" based on guidelines published [here](http://mappi
 Measurement of media coverage
 -----------------------------
 We initially avoid examining type or tone, and examine only quantity of media coverage about each victim. For each victim, we retrieve from MediaCloud:
-* links to all news stories in the timeframe (d-5, d+14), where d is the date of the killing--that is, the number of stories in a timeframe from five days before death to two weeks after death.
+* links to all news stories in the timeframe (d-5, d+14), where d is the date of the killing--that is, stories in a timeframe from five days before death to two weeks after death.
 * total number of news stories written about the victim in the specified timeframe
 * total number of news stories written in total in the specified timeframe
 
