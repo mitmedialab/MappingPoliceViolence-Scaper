@@ -24,7 +24,7 @@ We initially avoid examining type or tone, and examine only quantity of media co
 
 This timeframe is chosen because anecdotally, news coverage of an event often ends after two or three days, and very rarely persists after two weeks. The two-week window should therefore provide a reasonable snapshot of primary coverage while excluding post-hoc secondary coverage, which might for instance be more concerned with follow-up events, investigations, trials, or activism around the victim's death.
 
-Specifying a MediaCloud query that retrieves all the reportage of a victim while excluding irrelevant stories is often more complicated than simply querying the victim's name; for instance, many victims share names with prominent public figures (like Jerry Brown, who shares a name with the California governor) or have names that are otherwise common words (like Robert Baltimore). As such, the results of each query were manually checked, and the query was modified as necessary until no irrelevant stories were included.
+Specifying a MediaCloud query that retrieves all the reportage of a victim while excluding irrelevant stories is often more complicated than simply querying the victim's name; for instance, many victims share names with prominent public figures (like Jerry Brown, who shares a name with the California governor) or have names that are otherwise common (like Robert Baltimore). As such, the results of each query were manually checked, and the query was modified as necessary until no irrelevant stories were included.
 
 (more details on query adjustments go here)
 
