@@ -18,13 +18,11 @@ MPV codes victims as "unarmed" based on guidelines published [here](http://mappi
 Measurement of media coverage
 -----------------------------
 We initially avoid examining type or tone, and examine only quantity of media coverage about each victim. For each victim, we retrieve from MediaCloud:
-* links to all news stories in the timeframe (d-5, d+14), where d is the date of the killing--that is, stories in a timeframe from five days before death to two weeks after death.
+* links to all US mainstream news stories in the timeframe (d-5, d+14), where d is the date of the killing--that is, stories in a timeframe from five days before death to two weeks after death.
 * total number of news stories written about the victim in the specified timeframe
 * total number of news stories written in total in the specified timeframe
 
 This timeframe is chosen because anecdotally, news coverage of an event often ends after two or three days, and very rarely persists after two weeks. The two-week window should therefore provide a reasonable snapshot of primary coverage while excluding post-hoc secondary coverage, which might for instance be more concerned with follow-up events, investigations, trials, or activism around the victim's death.
 
-Specifying a MediaCloud query that retrieves all the reportage of a victim while excluding irrelevant stories is often more complicated than simply querying the victim's name; for instance, many victims share names with prominent public figures (like Jerry Brown, who shares a name with the California governor) or have names that are otherwise common (like Robert Baltimore). As such, the results of each query were manually checked, and the query was modified as necessary until no irrelevant stories were included.
-
-(more details on query adjustments go here)
-
+### Query adjustments
+Specifying a MediaCloud query that retrieves all the reportage of a victim while excluding irrelevant stories is often more complicated than simply querying the victim's name; for instance, many victims share names with prominent public figures (like Jerry Brown, who shares a name with the California governor) or have names that are otherwise common (like Robert Baltimore). Each query was manually entered on [Dashboard](https://dashboard.mediameter.org/), and the sentences sampled in the "Mentions: Sentences Matching" box were manually checked to ensure that all the stories found are relevant. If a victim has multiple names or name variants (for instance, "Asshams Manley" and "Asshams Pharoah Manley"), the query was adjusted to `name1 OR name2 OR name3 OR ...`. If irrelevant stories were found, the query was adjusted to exclude irrelevant stories; for instance, `Jerry Brown` was adjusted to `"Jerry Dwight Brown" OR ("jerry brown" AND (pasco OR zephyrhills OR fl OR florida))) AND -(gov* or CA or california or sacramento or democrat*)` to exclude references to the California governor.
