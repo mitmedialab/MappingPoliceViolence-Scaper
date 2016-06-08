@@ -8,7 +8,7 @@ Installation
 
 First install the dependences: `pip install -r requirements.pip`
 
-Make sure you set up a `GoogleSpreadsheetAccess....json` file with permissions for the spreadsheet.
+If you haven't already, follow the instructions in steps 1 and 2 [here](https://developers.google.com/sheets/quickstart/python) and download the indicated client_secret.json file.
 
 Copy `app.config.template` to `app.config` and fill it in with your info.
 
