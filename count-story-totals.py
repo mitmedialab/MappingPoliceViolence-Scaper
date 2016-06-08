@@ -24,7 +24,7 @@ story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = field
     extrasaction='ignore', encoding='utf-8')
 story_count_csv.writeheader()
 
-@cache
+# @cache - DISABLE CACHING FOR NOW - CAN'T GET THIS TO WORK ON MY MACHINE - ALLAN
 def count_stories(q,fq):
     return mc.storyCount(q,fq)['count']
 
