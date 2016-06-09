@@ -83,8 +83,8 @@ def get_query_adjustments():
         rangeName = 'Story Counts & Query Adjustments'
         result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'COLUMNS').execute()
         values = result.get('values', [])
-        adjustments = [s for s in values[10] if s != '']
-        namestoadjust = [n for i, n in enumerate(values[0]) if values[10][i] != '']
+        adjustments = [s for s in values[4] if s != '']
+        namestoadjust = [n for i, n in enumerate(values[0]) if values[4][i] != '']
         return dict(zip(namestoadjust, adjustments))
     else:
         print('NO DATA FOR YEAR ', YEAR)
