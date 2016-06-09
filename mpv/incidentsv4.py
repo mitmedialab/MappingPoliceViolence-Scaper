@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # basics stolen from https://developers.google.com/sheets/quickstart/python#step_3_set_up_the_sample
 
-from __future__ import print_function
 import httplib2
 import os
 

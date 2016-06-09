@@ -8,3 +8,5 @@ pymongo
 pypubsub
 socialshares
 HermesCache
+apiclient
+mediacloud>=2.26
