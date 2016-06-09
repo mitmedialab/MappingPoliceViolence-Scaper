@@ -8,6 +8,11 @@ basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 config = ConfigParser.ConfigParser()
 config.read(os.path.join(basedir, 'app.config'))
 
+# create the output dir
+dest_dir = os.path.join(basedir,'data',config.get('spreadsheet','year'))
+if not os.path.exists(dest_dir):
+    os.makedirs(dest_dir)
+
 # glocal mediacloud connection
 mc = mediacloud.api.AdminMediaCloud(config.get('mediacloud','key'))
 

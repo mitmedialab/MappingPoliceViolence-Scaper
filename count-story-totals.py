@@ -1,16 +1,18 @@
 import logging, os, sys, time, json, datetime, copy, unicodecsv
 from oauth2client.client import GoogleCredentials
 import mediacloud
-from mpv import basedir, config, mc, incidentsv4, cache
+from mpv import basedir, config, mc, incidentsv4, cache, dest_dir
 from mpv.util import build_mpv_daterange
 
 # turn off the story counting, useful if you just want to generate the giant query files
 WRITE_STORY_COUNT_CSVS = True
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'logs','count-story-totals.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(basedir,'logs',
+    config.get('spreadsheet','year')+'count-story-totals.log'),level=logging.DEBUG)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
+log.info("Writing output to %s" % dest_dir)
 start_time = time.time()
 requests_logger = logging.getLogger('requests')
 requests_logger.setLevel(logging.INFO)
@@ -22,7 +24,7 @@ custom_query_keywords = incidentsv4.get_query_adjustments()
 
 # set up a csv to record all the story urls
 if WRITE_STORY_COUNT_CSVS:
-    story_count_csv_file = open(os.path.join(basedir,'data','mpv-total-story-counts.csv'), 'w')
+    story_count_csv_file = open(os.path.join(dest_dir,'mpv-total-story-counts.csv'), 'w')
     fieldnames = ['full_name', 'date_of_death', 'total_stories', 'stories_about_person', 'normalized_stories_about_person', 'query', 'filter' ]
     story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
         extrasaction='ignore', encoding='utf-8')
@@ -37,7 +39,7 @@ media_filter_query = "(tags_id_media:(8875027 2453107 129 8878292 8878293 887829
 queries = []
 no_keyword_queries = [] # for normalization
 for person in data:
-    log.info("Working on %s" % person['full_name'])
+    log.info("  Working on %s" % person['full_name'])
     query = ""
     name_key = person['full_name']
     if name_key in custom_query_keywords:
@@ -76,11 +78,12 @@ if WRITE_STORY_COUNT_CSVS:
     story_count_csv_file.close()
 
 # write the query files out
-with open(os.path.join(basedir,"data","query-with-names.txt"), "w") as text_file:
+log.info("Writing query files to %s" % dest_dir)
+with open(os.path.join(dest_dir,"query-with-names.txt"), "w") as text_file:
     our_query = " OR ".join(queries)
     our_query = media_filter_query+" AND ("+our_query+")"
     text_file.write(our_query)
-with open(os.path.join(basedir,"data","query-no-names.txt"), "w") as text_file:
+with open(os.path.join(dest_dir,"query-no-names.txt"), "w") as text_file:
     control_query = " OR ".join(no_keyword_queries)
     control_query = media_filter_query+" AND ("+control_query+")"
     text_file.write(control_query)
