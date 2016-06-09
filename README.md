@@ -14,12 +14,12 @@ If you haven't already, follow the instructions in steps 1 and 2 [here](https://
 
 Make a copy of `app.config.template` and fill it in with your info. Rename it `app.config`. 
 
-Running
+Process
 -------
 
-### Generating Story Counts and Seed Query
+### 1. Generate Story Counts and Seed Query
 
-Run `count-story-totals.py` to create `data/mpv-total-story-counts.csv`.  This file inclues a list of:
+Run `count-story-totals.py` to create `data/YEAR/mpv-total-story-counts.csv`.  This file inclues a list of:
  * each victim's name
  * the total number of stories published from the sources in the time period
  * the number of stories from the sources that were about the victim in the time period
@@ -27,8 +27,14 @@ Run `count-story-totals.py` to create `data/mpv-total-story-counts.csv`.  This f
  * the query terms that specified the victim's name
  * the query filter that was used to specify the sources and the time period
 
-It writes giant combined queries to files in `data`, which we used to create the unspidered controversy.  This took about 10 minutes on my laptop.
+It writes giant combined queries to files in `data/YEAR/`, which we used to create the unspidered controversy.  This takes about 10 minutes on my laptop.
 
-### Listing Stories
+### 2. Create the Controversy
 
-Run `list-all-stories.py` to generate a list of all the stories in the controversy we created (`data/mpv-controvery-stories.csv`).
+Ask the core team to create a controversy by sending them the `data/YEAR/query-with-names.txt` file you created.  Once it is ready you'll need the numeric controversy id.  We do this to capture bit.ly click counts so we can evaluate social sharing over time.
+
+### 3. Generate the Outputs
+
+Run `count-coverage.py` to generate the attention over time data; saved to `data/YEAR/mpv-sentences-over-time.csv`.
+
+Run `list-all-stories.py` to generate a list of all the stories in the controversy we created (`data/YEAR/mpv-controvery-stories.csv`) and totals by victom (`data/YEAR/mpv-controversy-story-counts.csv`).
