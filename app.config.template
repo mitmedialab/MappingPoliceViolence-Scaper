@@ -3,9 +3,7 @@ key = YOUR_MEDIACLOUD_API_KEY
 controversy_id = CONTROVERSY_TO_SCRAPE
 
 [spreadsheet]
-url = URL
-worksheet = Death Detail
-query_adjustement_worksheet = Story Counts & Query Adjustmentss
+year = ####
 
 [cache]
 redis_db_number = 10
