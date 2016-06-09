@@ -1,14 +1,14 @@
-# `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess-be765243bfb4.json`
 import logging, os, sys, time, json, datetime, copy
 import requests, gspread, unicodecsv
 import mediacloud
-from mpv import basedir, config, mc, cache, incidentsv4
+from mpv import basedir, config, mc, cache, incidentsv4, dest_dir
 from mpv.util import build_mpv_daterange
 
 CONTROVERSY_ID = config.get('mediacloud','controversy_id')
 
 # set up logging
-logging.basicConfig(filename=os.path.join(basedir,'logs','list-all-stories.log'),level=logging.DEBUG)
+logging.basicConfig(filename=os.path.join(basedir,'logs',
+    config.get('spreadsheet','year')+'list-all-stories.log'),level=logging.DEBUG)
 log = logging.getLogger(__name__)
 log.info("---------------------------------------------------------------------------")
 start_time = time.time()
@@ -47,7 +47,7 @@ def fetch_all_stories(solr_query, solr_filter=''):
     return all_stories
 
 # set up a csv to record all the story urls
-story_url_csv_file = open(os.path.join(basedir,'data','mpv-controversy-stories.csv'), 'w')
+story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'w')
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
               'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'url' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
@@ -55,7 +55,7 @@ story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldname
 story_url_csv.writeheader()
 
 # set up a csv to record counts of all the stories per person
-story_count_csv_file = open(os.path.join(basedir,'data','mpv-controversy-story-counts.csv'), 'w')
+story_count_csv_file = open(os.path.join(dest_dir,'mpv-controversy-story-counts.csv'), 'w')
 fieldnames = ['full_name', 'story_count' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
