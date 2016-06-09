@@ -18,13 +18,13 @@ data = incidentsv4.get_all()
 custom_query_keywords = incidentsv4.get_query_adjustments()
 
 # set up a csv to record all the story urls
-story_count_csv_file = open(os.path.join(basedir,'data','mpv-total-story-counts.csv'), 'w')
+story_count_csv_file = open(os.path.join(basedir,'data','mpv-total-story-counts.csv'), 'wb') # use 'wb'for windows
 fieldnames = ['full_name', 'date_of_death', 'total_stories', 'stories_about_person', 'normalized_stories_about_person', 'query', 'filter' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_count_csv.writeheader()
 
-# @cache - DISABLE CACHING FOR NOW - CAN'T GET THIS TO WORK ON MY MACHINE - ALLAN
+@cache
 def count_stories(q,fq):
     return mc.storyCount(q,fq)['count']
 
@@ -59,6 +59,8 @@ for person in data:
     data['filter'] = query_filter
     story_count_csv.writerow(data)
     story_count_csv_file.flush()
+    
+story_count_csv_file.close()
 
 log.info("Giant combined query is:")
 log.info(" OR ".join(queries))
@@ -67,3 +69,4 @@ log.info(" OR ".join(queries))
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
+logging.shutdown()

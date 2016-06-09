@@ -8,9 +8,11 @@ Installation
 
 First install the dependences: `pip install -r requirements.pip`
 
-If you haven't already, follow the instructions in steps 1 and 2 [here](https://developers.google.com/sheets/quickstart/python) and download the indicated client_secret.json file.
+If you haven't already, install Redis for [Linux](http://redis.io/download) or [Windows](https://github.com/MSOpenTech/redis).
 
-Copy `app.config.template` to `app.config` and fill it in with your info.
+If you haven't already, follow the instructions in steps 1 and 2 [here](https://developers.google.com/sheets/quickstart/python) and download the indicated client_secret.json file to the 'mpv' subfolder.
+
+Make a copy of `app.config.template` and fill it in with your info. Rename it `app.config`. 
 
 Running
 -------

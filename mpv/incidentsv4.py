@@ -10,7 +10,7 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
-#from mpv import basedir, config
+from mpv import basedir, config
 
 try:
     import argparse
@@ -18,8 +18,8 @@ try:
 except ImportError:
     flags = None
     
-#YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU WANT
-YEAR = 2015
+YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU WANT
+
 # IDs for google spreadsheets of each year
 SPREADSHEET_IDS = {2014: '1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM',
                    2015: '1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY'}
