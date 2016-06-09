@@ -4,12 +4,13 @@
 import httplib2
 import os
 
-from apiclient import discovery
+from googleapiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
+from oauth2client.file import Storage
 
-from mpv import basedir, config
+#from mpv import basedir, config
 
 try:
     import argparse
@@ -17,8 +18,8 @@ try:
 except ImportError:
     flags = None
     
-YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU WANT
-
+#YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU WANT
+YEAR = 2015
 # IDs for google spreadsheets of each year
 SPREADSHEET_IDS = {2014: '1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM',
                    2015: '1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY'}
@@ -29,7 +30,7 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'mapping police violence'
 
-def get_credentials():
+def _get_credentials():
     """Gets valid user credentials from storage.
 
     If nothing has been stored, or if the stored credentials are invalid,
@@ -45,7 +46,7 @@ def get_credentials():
     credential_path = os.path.join(credential_dir,
                                    'sheets.googleapis.com-python-quickstart.json')
 
-    store = oauth2client.file.Storage(credential_path)
+    store = Storage(credential_path)
     credentials = store.get()
     if not credentials or credentials.invalid:
         flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
@@ -58,7 +59,7 @@ def get_credentials():
     return credentials
 
 def _setup():
-    credentials = get_credentials()
+    credentials = _get_credentials()
     http = credentials.authorize(httplib2.Http())
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?version=v4')
     service = discovery.build('sheets', 'v4', http=http, discoveryServiceUrl=discoveryUrl)
