@@ -1,3 +1,5 @@
+# DEPRECATED - USE INCIDENTSV4.PY, WHICH USES GOOGLE SHEETS APIv4
+
 import requests, gspread, unicodecsv, logging, os
 from oauth2client.client import GoogleCredentials
 

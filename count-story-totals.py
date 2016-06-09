@@ -1,8 +1,7 @@
-# `export GOOGLE_APPLICATION_CREDENTIALS=./GoogleSpreadsheetAccess-be765243bfb4.json`
 import logging, os, sys, time, json, datetime, copy, unicodecsv
 from oauth2client.client import GoogleCredentials
 import mediacloud
-from mpv import basedir, config, mc, incidents, cache
+from mpv import basedir, config, mc, incidentsv4, cache
 from mpv.util import build_mpv_daterange
 
 # turn off the story counting, useful if you just want to generate the giant query files
@@ -18,8 +17,8 @@ requests_logger.setLevel(logging.INFO)
 mc_logger = logging.getLogger('mediacloud')
 mc_logger.setLevel(logging.INFO)
 
-data = incidents.get_all()
-custom_query_keywords = incidents.get_query_adjustments()
+data = incidentsv4.get_all()
+custom_query_keywords = incidentsv4.get_query_adjustments()
 
 # set up a csv to record all the story urls
 if WRITE_STORY_COUNT_CSVS:
@@ -40,12 +39,14 @@ no_keyword_queries = [] # for normalization
 for person in data:
     log.info("Working on %s" % person['full_name'])
     query = ""
-    name_key = person['first_name']+' '+person['last_name']
+    name_key = person['full_name']
     if name_key in custom_query_keywords:
         log.info("  adjustment: %s -> %s" % (name_key,custom_query_keywords[name_key]))
         query = custom_query_keywords[name_key]
+    elif 'first_name' in person.keys() and 'last_name' in person.keys():
+        query = '"{0}" AND "{1}"'.format(person['first_name'], person['last_name']) 
     else:
-        query = '"{0}" AND "{1}"'.format(person['first_name'], person['last_name'])
+        query = '"{0}"'.format(person['full_name'])
 
     # a) limit query to correct date range only
     # query_filter = build_mpv_daterange(row)
@@ -71,6 +72,9 @@ for person in data:
         story_count_csv.writerow(data)
         story_count_csv_file.flush()
 
+if WRITE_STORY_COUNT_CSVS:
+    story_count_csv_file.close()
+
 # write the query files out
 with open(os.path.join(basedir,"data","query-with-names.txt"), "w") as text_file:
     our_query = " OR ".join(queries)
@@ -85,3 +89,4 @@ with open(os.path.join(basedir,"data","query-no-names.txt"), "w") as text_file:
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
+logging.shutdown()

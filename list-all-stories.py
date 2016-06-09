@@ -2,7 +2,7 @@
 import logging, os, sys, time, json, datetime, copy
 import requests, gspread, unicodecsv
 import mediacloud
-from mpv import basedir, config, mc, cache, incidents
+from mpv import basedir, config, mc, cache, incidentsv4
 from mpv.util import build_mpv_daterange
 
 CONTROVERSY_ID = config.get('mediacloud','controversy_id')
@@ -24,8 +24,8 @@ log.info("Working from controversy %s" % CONTROVERSY_ID)
 results = mc.storyCount("{~ controversy:"+CONTROVERSY_ID+"}")
 log.info("  %s total stories" % CONTROVERSY_ID)
 
-data = incidents.get_all()
-custom_query_keywords = incidents.get_query_adjustments()
+data = incidentsv4.get_all()
+custom_query_keywords = incidentsv4.get_query_adjustments()
 
 @cache
 def fetch_all_stories(solr_query, solr_filter=''):
