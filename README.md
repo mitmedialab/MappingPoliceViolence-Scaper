@@ -35,6 +35,6 @@ Ask the core team to create a controversy by sending them the `data/YEAR/query-w
 
 ### 3. Generate the Outputs
 
-Run `count-coverage.py` to generate the attention over time data; saved to `data/YEAR/mpv-sentences-over-time.csv`.
+Run `count-coverage.py` to generate the attention over time data; saved to `data/YEAR/mpv-sentences-over-time.csv`. This takes a few seconds.
 
-Run `list-all-stories.py` to generate a list of all the stories in the controversy we created (`data/YEAR/mpv-controvery-stories.csv`) and totals by victom (`data/YEAR/mpv-controversy-story-counts.csv`).
+Run `list-all-stories.py` to generate a list of all the stories in the controversy we created (`data/YEAR/mpv-controvery-stories.csv`) and totals by victim (`data/YEAR/mpv-controversy-story-counts.csv`). This took about 25 minutes for me.

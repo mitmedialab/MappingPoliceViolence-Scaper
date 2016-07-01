@@ -78,3 +78,5 @@ for k in sorted(our_counts['split'].keys()):
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
+
+output_file.close()

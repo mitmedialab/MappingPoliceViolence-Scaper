@@ -141,3 +141,6 @@ log.info("  took %d seconds to query" % time_spent_querying )
 log.info("  took %d seconds to queue" % time_spent_queueing )
 
 #log.info("There are %d stories total in the db" % db.storyCount())
+
+story_count_csv_file.close()
+story_url_csv_file.close()
