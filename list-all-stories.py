@@ -71,12 +71,16 @@ for person in data:
     #   continue
     # build the in-controversy query for stories about this person
     query = "{~ controversy:"+CONTROVERSY_ID+"}"
-    name_key = person['first_name']+' '+person['last_name']
+
+    name_key = person['full_name']
     if name_key in custom_query_keywords:
         log.info("  adjustment: %s -> %s" % (name_key,custom_query_keywords[name_key]))
-        query+= " AND " +custom_query_keywords[name_key]
+        query += " AND " +custom_query_keywords[name_key]
+    elif 'first_name' in person.keys() and 'last_name' in person.keys():
+        query += ' AND "{0}" AND "{1}"'.format(person['first_name'], person['last_name']) 
     else:
-        query+= " AND " + '"{0}" AND "{1}"'.format(person['first_name'], person['last_name'])
+        query += ' AND "{0}"'.format(person['full_name'])
+
     query_filter = build_mpv_daterange(person['date_of_death'])
 
     # fetch the stories

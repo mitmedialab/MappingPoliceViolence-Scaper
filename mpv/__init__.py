@@ -14,7 +14,7 @@ if not os.path.exists(dest_dir):
     os.makedirs(dest_dir)
 
 # glocal mediacloud connection
-mc = mediacloud.api.AdminMediaCloud(config.get('mediacloud','key'))
+mc = mediacloud.api.MediaCloud(config.get('mediacloud','key'))
 
 # initialize the cache
 cache = hermes.Hermes(hermes.backend.redis.Backend, ttl=31104000, host='localhost', 
