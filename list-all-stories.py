@@ -47,7 +47,7 @@ def fetch_all_stories(solr_query, solr_filter=''):
     return all_stories
 
 # set up a csv to record all the story urls
-story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'w')
+story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
               'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'url' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
@@ -55,7 +55,7 @@ story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldname
 story_url_csv.writeheader()
 
 # set up a csv to record counts of all the stories per person
-story_count_csv_file = open(os.path.join(dest_dir,'mpv-controversy-story-counts.csv'), 'w')
+story_count_csv_file = open(os.path.join(dest_dir,'mpv-controversy-story-counts.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 fieldnames = ['full_name', 'story_count' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')

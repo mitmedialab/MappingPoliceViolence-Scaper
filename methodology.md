@@ -6,11 +6,15 @@ This work concerns a collaboration with BlackLivesMatter activist DeRay Mckesson
 List of victims
 ---------------
 There exist no 100% reliable lists of all victims of police violence, due to lack of transparency and poor documentation on the part of law enforcement agencies. This work relies on three databases which draw from news reporting, public record, and crowdsourced information in an attempt to comprehensively document victims of police violence. They are:
-* [Mapping Police Violence](http://mappingpoliceviolence.org/) (MPV)
-* [The Counted](http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database), by the Guardian
-* [Police Shootings](https://www.washingtonpost.com/graphics/national/police-shootings/), by the Washington Post
+* [Mapping Police Violence](http://mappingpoliceviolence.org/) (MPV), with data [here](http://mappingpoliceviolence.org/aboutthedata/).
+* [The Counted](http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database), by the Guardian, with data [here](http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted).
+* [Police Shootings](https://www.washingtonpost.com/graphics/national/police-shootings/), by the Washington Post, with data [here](https://github.com/washingtonpost/data-police-shootings).
 
-Analysis of police violence in 2014 relies solely on the list of [unarmed black victims](http://mappingpoliceviolence.org/unarmed2014/) provided by MPV. Analysis of police violence in 2015 relies on a combined list from all three sources.
+Analysis of police violence in 2014 relies solely on the list of [unarmed black victims](http://mappingpoliceviolence.org/unarmed2014/) provided by MPV. Analysis of police violence in 2015 relies on a combined list from all three sources. Analysis of police violence in 2016 relies only on WaPo and Guardian data.
+
+* 2014 spreadsheet: https://docs.google.com/spreadsheets/d/1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM/edit?usp=sharing
+* 2015 spreadsheet: https://docs.google.com/spreadsheets/d/1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY/edit?usp=sharing
+* 2016 spreadsheet: https://docs.google.com/spreadsheets/d/19wsyttAqa4jbPnqmxQWbu79rwzp3eq_EHbzzsRiomTU/edit?usp=sharing
 
 Measurement of media coverage
 -----------------------------
@@ -19,12 +23,19 @@ We initially avoid examining type or tone, and examine only quantity of media co
 * total number of news stories written about the victim in the specified timeframe
 * total number of news stories written in total in the specified timeframe
 
-This timeframe is chosen becaus eanecdotally, news coverage of an event often ends after two or three days, and very rarely persists after two weeks. The two-week window should therefore provide a reasonable snapshot of primary coverage while excluding post-hoc secondary coverage, which might for instance be more concerned with follow-up events, investigations, trials, or activism around the victim's death. We also include the five days prior to capture coverage of the events leading up to the victim's death (for instance, if a victim was arrested and injured and then died in custody a few days later)
+This timeframe is chosen because anecdotally, news coverage of an event often ends after two or three days, and very rarely persists after two weeks. The two-week window should therefore provide a reasonable snapshot of primary coverage while excluding post-hoc secondary coverage, which might for instance be more concerned with follow-up events, investigations, trials, or activism around the victim's death. We also include the five days prior to capture coverage of the events leading up to the victim's death (for instance, if a victim was arrested and injured and then died in custody a few days later).
+
+After we generate a combined query, create a controversy object, and generate a list of stories and bit.ly counts for each story, we sample some random names in the generated `mpv-controversy-stories.csv` to check for unrelated stories, and manually remove those unrelated stories from the controversy
 
 ### Ambiguities and disputed data
 
 #### Definition of "unarmed"
-MPV codes victims as "unarmed" based on guidelines published [here](http://mappingpoliceviolence.org/aboutthedata/); most notably, they classify victims "holding a toy weapon" as unarmed. This is a discrepancy from both the Guardian and WaPo; the Guardian distinguishes between codings of "unarmed" and "non-lethal firearm", while WaPo distinguishes between "unarmed" and "toy weapon". The decision of whether victims holding toy weapons should be classified as "armed" or "unarmed" is both unobvious and political. Our list includes all black victims coded by our sources as "unarmed", "uncertain/disputed", and "toy weapon/non-lethal firearm", and we include the original coding in our spreadsheet.
+MPV codes victims as "unarmed" based on guidelines published [here](http://mappingpoliceviolence.org/aboutthedata/); most notably, they classify victims "holding a toy weapon" as unarmed. This is a discrepancy from both the Guardian and WaPo; the Guardian distinguishes between codings of "unarmed" and "non-lethal firearm", while WaPo distinguishes between "unarmed" and "toy weapon". The decision of whether victims holding toy weapons should be classified as "armed" or "unarmed" is both unobvious and political. Our list includes all black victims coded by our sources in the categories below, and we include the original codings in our spreadsheets.
+
+We include all incidents coded as follows:
+* "unarmed" or "unclear" by MPV 
+* "unarmed", "unknown", "disputed", or "non-lethal firearm" by the Guardian
+* "unarmed", "undetermined", or "toy weapon" by WaPo
 
 #### Date of incident
 MPV lists the date as "date of injury resulting in death" while WaPo and the Guardian only say they list the "date." This results in some discrepancies in the date of the "event." For one-day discrepancies, we use the earlier date. Freddie Gray and Natasha McKenna have larger discrepancies due to the particular circumstances of their deaths:

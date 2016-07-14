@@ -22,7 +22,8 @@ YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU 
 
 # IDs for google spreadsheets of each year
 SPREADSHEET_IDS = {2014: '1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM',
-                   2015: '1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY'}
+                   2015: '1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY',
+                   2016: '19wsyttAqa4jbPnqmxQWbu79rwzp3eq_EHbzzsRiomTU'}
                    
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
@@ -72,19 +73,29 @@ def get_query_adjustments():
     service = _setup()
     spreadsheetId = SPREADSHEET_IDS[YEAR]
 
-    if YEAR == 2015:
+    if YEAR == 2016:
         rangeName = 'combined_clean'
         result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'COLUMNS').execute()
         values = result.get('values', [])
-        adjustments = [s for s in values[10] if s != '']
+        adjustments = ['('+s+')' for s in values[9] if s != '']
+        namestoadjust = [n for i, n in enumerate(values[0]) if values[9][i] != '']
+        return dict(zip(namestoadjust, adjustments))
+    elif YEAR == 2015:
+        rangeName = 'combined_clean'
+        result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'COLUMNS').execute()
+        values = result.get('values', [])
+        adjustments = ['('+s+')' for s in values[10] if s != '']
         namestoadjust = [n for i, n in enumerate(values[0]) if values[10][i] != '']
         return dict(zip(namestoadjust, adjustments))
     elif YEAR == 2014:
-        rangeName = 'Story Counts & Query Adjustments'
+        #rangeName = 'Story Counts & Query Adjustments'
+        rangeName = 'clean'
         result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'COLUMNS').execute()
         values = result.get('values', [])
-        adjustments = [s for s in values[4] if s != '']
-        namestoadjust = [n for i, n in enumerate(values[0]) if values[4][i] != '']
+        #adjustments = ['('+s+')' for s in values[4] if s != '']
+        #namestoadjust = [n for i, n in enumerate(values[0]) if values[4][i] != '']
+        adjustments = ['('+s+')' for s in values[9] if s != '']
+        namestoadjust = [n for i, n in enumerate(values[0]) if values[9][i] != '']
         return dict(zip(namestoadjust, adjustments))
     else:
         print('NO DATA FOR YEAR ', YEAR)
@@ -97,7 +108,7 @@ def get_all():
     service = _setup()
     spreadsheetId = SPREADSHEET_IDS[YEAR]
     
-    if YEAR == 2015:
+    if YEAR == 2016:
         rangeName = 'combined_clean'
         result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'ROWS').execute()
         values = result.get('values', [])[1:]
@@ -105,18 +116,28 @@ def get_all():
                    'date_of_death': row[2]} 
                    for row in values]
         return people
-        
-    elif YEAR == 2014:
-        rangeName = 'Death Details'
+    elif YEAR == 2015:
+        rangeName = 'combined_clean'
         result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'ROWS').execute()
         values = result.get('values', [])[1:]
         people = [{'full_name': row[0],
-                   'date_of_death': row[4],
-                   'first_name': row[1],
-                   'last_name': row[2]}
+                   'date_of_death': row[2]} 
+                   for row in values]
+        return people    
+    elif YEAR == 2014:
+        #rangeName = 'Death Details'
+        rangeName = 'clean'
+        result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'ROWS').execute()
+        values = result.get('values', [])[1:]
+        #people = [{'full_name': row[0],
+        #           'date_of_death': row[4],
+        #           'first_name': row[1],
+        #           'last_name': row[2]}
+        #           for row in values]
+        people = [{'full_name': row[0],
+                   'date_of_death': row[2]} 
                    for row in values]
         return people
-        
     else:
         print('NO DATA FOR YEAR ', YEAR)
         return []

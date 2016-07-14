@@ -56,7 +56,7 @@ del(control_counts['split']['end'])
 
 log.info("Writing Output CSV...")
 
-output_file = open(os.path.join(dest_dir,'mpv-sentences-over-time.csv'), 'w')
+output_file = open(os.path.join(dest_dir,'mpv-sentences-over-time.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 fieldnames = ['date', 'sentences_about_victims', 'total_sentences', 'pct_coverage' ]
 output_csv = unicodecsv.DictWriter(output_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')

@@ -24,7 +24,7 @@ custom_query_keywords = incidentsv4.get_query_adjustments()
 
 # set up a csv to record all the story urls
 if WRITE_STORY_COUNT_CSVS:
-    story_count_csv_file = open(os.path.join(dest_dir,'mpv-total-story-counts.csv'), 'w')
+    story_count_csv_file = open(os.path.join(dest_dir,'mpv-total-story-counts.csv'), 'wb') #'wb' for windows
     fieldnames = ['full_name', 'date_of_death', 'total_stories', 'stories_about_person', 'normalized_stories_about_person', 'query', 'filter' ]
     story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
         extrasaction='ignore', encoding='utf-8')
