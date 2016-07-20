@@ -25,7 +25,7 @@ We initially avoid examining type or tone, and examine only quantity of media co
 
 This timeframe is chosen because anecdotally, news coverage of an event often ends after two or three days, and very rarely persists after two weeks. The two-week window should therefore provide a reasonable snapshot of primary coverage while excluding post-hoc secondary coverage, which might for instance be more concerned with follow-up events, investigations, trials, or activism around the victim's death. We also include the five days prior to capture coverage of the events leading up to the victim's death (for instance, if a victim was arrested and injured and then died in custody a few days later).
 
-After we generate a combined query, create a controversy object, and generate a list of stories and bit.ly counts for each story, we sample some random names in the generated `mpv-controversy-stories.csv` to check for unrelated stories, and manually remove those unrelated stories from the controversy
+After we generate a combined query, create a controversy object, and generate a list of stories and bit.ly counts for each story, we sample some random names in the generated `mpv-controversy-stories.csv` to check for unrelated stories, and manually remove those unrelated stories from the controversy.
 
 ### Ambiguities and disputed data
 

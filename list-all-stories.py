@@ -1,7 +1,7 @@
 import logging, os, sys, time, json, datetime, copy
 import requests, gspread, unicodecsv
 import mediacloud
-from mpv import basedir, config, mc, cache, incidentsv4, dest_dir
+from mpv import basedir, config, mc, mca, cache, incidentsv4, dest_dir
 from mpv.util import build_mpv_daterange
 
 CONTROVERSY_ID = config.get('mediacloud','controversy_id')
@@ -21,7 +21,7 @@ log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
 log.info("Working from controversy %s" % CONTROVERSY_ID)
 
-results = mc.storyCount("{~ controversy:"+CONTROVERSY_ID+"}")
+results = mc.storyCount("{~ topic:"+CONTROVERSY_ID+"}")
 log.info("  %s total stories" % CONTROVERSY_ID)
 
 data = incidentsv4.get_all()
@@ -36,7 +36,8 @@ def fetch_all_stories(solr_query, solr_filter=''):
     page = 0
     while True:
         log.debug("  querying for %s | %s" % (solr_query,solr_filter))
-        stories = mc.storyList(solr_query=solr_query, solr_filter=solr_filter, last_processed_stories_id=start, rows=offset)
+        stories = mc.storyList(solr_query=solr_query, solr_filter=solr_filter, 
+                               last_processed_stories_id=start, rows=offset)
         log.info('  page %d' % page),
         all_stories.extend(stories)
         if len(stories) < 1:
@@ -45,11 +46,40 @@ def fetch_all_stories(solr_query, solr_filter=''):
         page = page + 1
     log.info('  Retrieved {0} stories for query {1}'.format(len(all_stories), solr_query))
     return all_stories
+    
+# get facebook shares for all the stories in the topic
+@cache
+def fetch_share_counts(tid, continueid):
+    storybatch = mca.topicStoryList(tid, limit=500, continuation_id = continueid)
+    shares = [(s['stories_id'], s['facebook_share_count']) for s in storybatch['stories']]
+    continuation = storybatch['continuation_id']
+    return shares, continuation
+
+log.info('reading topicStoryList for facebook shares')
+fbshares_start = time.time()
+fbshares = [] # facebook shares indexed by stories_id
+continuation_id = None
+
+while True:
+    log.info('continuation_id: {0}'.format(continuation_id))
+    log.info('{0} stories found so far'.format(len(fbshares)))
+    
+    shares, continuation = fetch_share_counts(CONTROVERSY_ID, continuation_id)
+    
+    if len(shares) == 0: #reached the end
+        break
+    
+    fbshares += shares
+    continuation_id = continuation
+
+fbshares = dict(fbshares)
+
+time_spent_fbshares = float(time.time() - fbshares_start)
 
 # set up a csv to record all the story urls
 story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
-              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'url' ]
+              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'url' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_url_csv.writeheader()
@@ -70,7 +100,7 @@ for person in data:
     #if person['full_name']!="Akai Gurley":
     #   continue
     # build the in-controversy query for stories about this person
-    query = "{~ controversy:"+CONTROVERSY_ID+"}"
+    query = "{~ topic:"+CONTROVERSY_ID+"}"
 
     name_key = person['full_name']
     if name_key in custom_query_keywords:
@@ -116,6 +146,7 @@ for person in data:
         story_data['stories_id'] = story['stories_id']
         story_data['url'] = story['url']
         story_data['bitly_click_count'] = story['bitly_click_count']
+        story_data['facebook_share_count'] = fbshares[int(story['stories_id'])]
         story_data['media_id'] = story['media_id']
         story_data['media_name'] = story['media_name']
         story_url_csv.writerow(story_data)
@@ -137,6 +168,7 @@ for person in data:
 duration_secs = float(time.time() - start_time)
 log.info("Finished!")
 log.info("  took %d seconds total" % duration_secs)
+log.info("  took %d seconds to look up fb shares" % time_spent_fbshares)
 log.info("  took %d seconds to query" % time_spent_querying )
 log.info("  took %d seconds to queue" % time_spent_queueing )
 

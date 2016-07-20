@@ -24,7 +24,7 @@ log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 
 log.info("Working from controversy %s" % CONTROVERSY_ID)
 
-controversy_filter = "{~ controversy:"+CONTROVERSY_ID+"}"
+controversy_filter = "{~ topic:"+CONTROVERSY_ID+"}"
 results = mc.storyCount(controversy_filter)
 log.info("  %s total stories" % CONTROVERSY_ID)
 
