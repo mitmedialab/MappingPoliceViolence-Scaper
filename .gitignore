@@ -1,6 +1,5 @@
 GoogleSpreadsheetAccess*
 venv
-*.csv
 *.log
 tmp
 cache
