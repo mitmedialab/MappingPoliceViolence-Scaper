@@ -21,7 +21,8 @@ except ImportError:
 YEAR = int(config.get('spreadsheet','year')) # SET THIS TO THE YEAR OF DATA YOU WANT
 
 # IDs for google spreadsheets of each year
-SPREADSHEET_IDS = {2014: '1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM',
+SPREADSHEET_IDS = {2013: '1ArisyAjhUE1eeuA490-rPPI1nfft2cJIyDpaeOBqyj8',
+                   2014: '1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM',
                    2015: '1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY',
                    2016: '19wsyttAqa4jbPnqmxQWbu79rwzp3eq_EHbzzsRiomTU'}
                    
@@ -97,6 +98,13 @@ def get_query_adjustments():
         adjustments = ['('+s+')' for s in values[9] if s != '']
         namestoadjust = [n for i, n in enumerate(values[0]) if values[9][i] != '']
         return dict(zip(namestoadjust, adjustments))
+    elif YEAR == 2013:
+        rangeName = 'clean'
+        result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'COLUMNS').execute()
+        values = result.get('values', [])
+        adjustments = ['('+s+')' for s in values[9] if s != '']
+        namestoadjust = [n for i, n in enumerate(values[0]) if values[9][i] != '']
+        return dict(zip(namestoadjust, adjustments))
     else:
         print('NO DATA FOR YEAR ', YEAR)
         return {}
@@ -134,6 +142,14 @@ def get_all():
         #           'first_name': row[1],
         #           'last_name': row[2]}
         #           for row in values]
+        people = [{'full_name': row[0],
+                   'date_of_death': row[2]} 
+                   for row in values]
+        return people
+    elif YEAR == 2013:
+        rangeName = 'clean'
+        result = service.spreadsheets().values().get(spreadsheetId=spreadsheetId, range=rangeName, majorDimension = 'ROWS').execute()
+        values = result.get('values', [])[1:]
         people = [{'full_name': row[0],
                    'date_of_death': row[2]} 
                    for row in values]

@@ -33,6 +33,7 @@ It writes giant combined queries to files in `data/YEAR/`, which we used to crea
 
 Run mc.storyCount() on the giant query in the `data/YEAR/query-with-names.txt` file you created to make sure that the number of stories is reasonable. Then ask the core team to create a controversy by sending them that txt file. Once it is ready you'll need the numeric controversy id.  We do this to capture bit.ly click counts so we can evaluate social sharing over time.
 
+* controversy_id for 2013: 
 * controversy_id for 2014: 1326
 * controversy_id for 2015: 1394 
 * controversy_id for 2016: 1408
@@ -42,3 +43,7 @@ Run mc.storyCount() on the giant query in the `data/YEAR/query-with-names.txt` f
 Run `list-all-stories.py` to generate a list of all the stories in the topic we created (`data/YEAR/mpv-controversy-stories.csv`) and totals by victim (`data/YEAR/mpv-controversy-story-counts.csv`). This took about 25 minutes for me. Manually check some random names in the spreadsheet to ensure that the stories are on-topic, and remove the necessary story ids from the topic in the Topic Mapper tool. Once the topic is regenerated, run `list-all-stories.py` again to generate clean story data.
 
 Run `count-coverage.py` to generate the attention over time data, saved to `data/YEAR/mpv-sentences-over-time.csv`. This takes a few seconds.
+
+### Notes:
+
+Remember to flush your local redis cache if any of the controversies have been updated. Do this by running `cache.clean()` in the Python console.

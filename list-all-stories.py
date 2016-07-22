@@ -22,7 +22,7 @@ log.info("Using redis db %s as a cache" % config.get('cache','redis_db_number'))
 log.info("Working from controversy %s" % CONTROVERSY_ID)
 
 results = mc.storyCount("{~ topic:"+CONTROVERSY_ID+"}")
-log.info("  %s total stories" % CONTROVERSY_ID)
+log.info("  %s total stories" % results)
 
 data = incidentsv4.get_all()
 custom_query_keywords = incidentsv4.get_query_adjustments()
@@ -50,27 +50,28 @@ def fetch_all_stories(solr_query, solr_filter=''):
 # get facebook shares for all the stories in the topic
 @cache
 def fetch_share_counts(tid, continueid):
-    storybatch = mca.topicStoryList(tid, limit=500, continuation_id = continueid)
+    storybatch = mca.topicStoryList(tid, limit=500, link_id = continueid)
     shares = [(s['stories_id'], s['facebook_share_count']) for s in storybatch['stories']]
-    continuation = storybatch['continuation_id']
+    continuation = storybatch['link_ids'] # for paging through results
     return shares, continuation
 
 log.info('reading topicStoryList for facebook shares')
 fbshares_start = time.time()
 fbshares = [] # facebook shares indexed by stories_id
-continuation_id = None
+continuationid = None
 
 while True:
-    log.info('continuation_id: {0}'.format(continuation_id))
+    log.info('continuation_id: {0}'.format(continuationid))
     log.info('{0} stories found so far'.format(len(fbshares)))
     
-    shares, continuation = fetch_share_counts(CONTROVERSY_ID, continuation_id)
-    
-    if len(shares) == 0: #reached the end
+    shares, continuation = fetch_share_counts(CONTROVERSY_ID, continuationid)
+    fbshares += shares
+
+    #if no more results, no "next" page id in continuation dictionary
+    if len(shares) == 0 or 'next' not in continuation: 
         break
     
-    fbshares += shares
-    continuation_id = continuation
+    continuationid = continuation['next']
 
 fbshares = dict(fbshares)
 

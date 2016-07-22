@@ -8,5 +8,5 @@ pymongo
 pypubsub
 socialshares
 HermesCache
-mediacloud>=2.29
+mediacloud>=2.32
 google-api-python-client
