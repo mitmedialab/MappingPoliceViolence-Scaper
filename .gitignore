@@ -6,13 +6,5 @@ tmp
 cache
 *.pyc
 app.config
-data/*.csv
-data/*.xls
-data/*.xlsx
-data/old
-data/*.txt
-data/2016
-data/2015
-data/2014
 data/2013
 client_secret.json

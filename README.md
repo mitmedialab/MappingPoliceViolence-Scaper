@@ -46,4 +46,4 @@ Run `count-coverage.py` to generate the attention over time data, saved to `data
 
 ### Notes:
 
-Remember to flush your local redis cache if any of the controversies have been updated. Do this by running `cache.clean()` in the Python console.
+Remember to flush your local redis cache if any of the controversies have been updated. Do this by running the `__init__.py` and then running `cache.clean()` in the Python console.
