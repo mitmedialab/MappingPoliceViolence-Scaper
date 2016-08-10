@@ -33,7 +33,7 @@ It writes giant combined queries to files in `data/YEAR/`, which we used to crea
 
 Run mc.storyCount() on the giant query in the `data/YEAR/query-with-names.txt` file you created to make sure that the number of stories is reasonable. Then ask the core team to create a controversy by sending them that txt file. Once it is ready you'll need the numeric controversy id.  We do this to capture bit.ly click counts so we can evaluate social sharing over time.
 
-* controversy_id for 2013: 
+* controversy_id for 2013: 1421
 * controversy_id for 2014: 1326
 * controversy_id for 2015: 1394 
 * controversy_id for 2016: 1408

@@ -5,5 +5,4 @@ tmp
 cache
 *.pyc
 app.config
-data/2013
 client_secret.json
