@@ -80,7 +80,7 @@ time_spent_fbshares = float(time.time() - fbshares_start)
 # set up a csv to record all the story urls
 story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
-              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'url' ]
+              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'url', 'num_sentences' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_url_csv.writeheader()
@@ -150,6 +150,7 @@ for person in data:
         story_data['facebook_share_count'] = fbshares[int(story['stories_id'])]
         story_data['media_id'] = story['media_id']
         story_data['media_name'] = story['media_name']
+        story_data['num_sentences'] = len(mca.story(story['stories_id'], sentences=True)['story_sentences'])
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
         # now figure out how to save it

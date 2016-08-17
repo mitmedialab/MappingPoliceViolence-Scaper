@@ -52,3 +52,7 @@ Specifying a MediaCloud query that retrieves all the reportage of a victim while
 
 #### Other metadata
 For all other data about each person/incident (age, gender, signs of mental illness, city/state, responsible law enforcement agency) we use data provided by MPV. If the incident is not listed in the MPV dataset, we use data provided by the Guardian. If the incident is not listed in the Guardian dataset either, we use data provided by WaPo. All information missing after this process is tabulated as NaN.
+
+Population data for each city is manually retrieved from the US Census Bureau's [American FactFinder](http://factfinder.census.gov/faces/nav/jsf/pages/community_facts.xhtml) tool. If the listed city is unavailable, we use Wikipedia. If Wikipedia does not provide the information, we estimate population using the city's zip code(s).
+
+MPV has one case listed under "Liberty City" (a district of Miami) and one case listed under "Vermont Square" (a district of Los Angeles) -- for these cases we use the city for our analysis, and not the specific district.
