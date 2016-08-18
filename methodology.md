@@ -50,9 +50,12 @@ For Gray and McKenna, we use the dates of their deaths to timeframe the queries.
 ### Query adjustments
 Specifying a MediaCloud query that retrieves all the reportage of a victim while excluding irrelevant stories is often more complicated than simply querying the victim's name; for instance, many victims share names with prominent public figures (like Jerry Brown, who shares a name with the California governor) or have names that are otherwise common (like Robert Baltimore). Each query was manually entered on [Dashboard](https://dashboard.mediameter.org/), and the sentences sampled in the "Mentions: Sentences Matching" box were manually checked to ensure that all the stories found are relevant. If a victim has multiple names, name variants, or name misspellings (for instance, "Asshams Manley" and "Asshams Pharoah Manley"), the query was adjusted to `name1 OR name2 OR name3 OR ...`. If irrelevant stories were found, the query was adjusted to exclude irrelevant stories; for instance, `Jerry Brown` was adjusted to `"Jerry Dwight Brown" OR ("jerry brown" AND (pasco OR zephyrhills OR fl OR florida))) AND -(gov* or CA or california or sacramento or democrat*)` to exclude references to the California governor.
 
-#### Other metadata
+#### Other metadata and notes
 For all other data about each person/incident (age, gender, signs of mental illness, city/state, responsible law enforcement agency) we use data provided by MPV. If the incident is not listed in the MPV dataset, we use data provided by the Guardian. If the incident is not listed in the Guardian dataset either, we use data provided by WaPo. All information missing after this process is tabulated as NaN.
 
 Population data for each city is manually retrieved from the US Census Bureau's [American FactFinder](http://factfinder.census.gov/faces/nav/jsf/pages/community_facts.xhtml) tool. If the listed city is unavailable, we use Wikipedia. If Wikipedia does not provide the information, we estimate population using the city's zip code(s).
 
 MPV has one case listed under "Liberty City" (a district of Miami) and one case listed under "Vermont Square" (a district of Los Angeles) -- for these cases we use the city for our analysis, and not the specific district.
+
+#### Multiple mentions
+What happens if a story mentions two or more victims? `list-all-stories.py` counts a story twice if it mentions two victims, but only if the story falls within the 2-week timeframe around both victims' deaths. So if a story about person A's recent death also mentions person B who died two months ago, that story is only included under person A, and not under person B.
