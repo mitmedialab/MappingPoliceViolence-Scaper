@@ -77,8 +77,13 @@ fbshares = dict(fbshares)
 
 time_spent_fbshares = float(time.time() - fbshares_start)
 
+@cache
+def sentences_in_story(storyid):
+    return len(mca.story(storyid, sentences=True)['story_sentences'])
+
 # set up a csv to record all the story urls
 story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
+
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
               'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'url', 'num_sentences' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
@@ -87,6 +92,7 @@ story_url_csv.writeheader()
 
 # set up a csv to record counts of all the stories per person
 story_count_csv_file = open(os.path.join(dest_dir,'mpv-controversy-story-counts.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
+
 fieldnames = ['full_name', 'story_count' ]
 story_count_csv = unicodecsv.DictWriter(story_count_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
@@ -131,11 +137,12 @@ for person in data:
         if '?' in story['base_url']:
             question_pos = story['base_url'].index('?')
             story['base_url'] = story['base_url'][:question_pos]        
-        # now skip it if we have done it already
+        # now skip it if we have done it already for this person
         if story['base_url'] in urls_already_done:   # skip duplicate urls that have different story_ids
             log.debug("    skipping story %s because we've alrady queued that url" % story['stories_id'])
             duplicate_stories = duplicate_stories + 1
             continue
+            
         urls_already_done.append(story['base_url'])
         # skip if it is in the db already
         #if db.storyExists(story['stories_id']):
@@ -150,7 +157,7 @@ for person in data:
         story_data['facebook_share_count'] = fbshares[int(story['stories_id'])]
         story_data['media_id'] = story['media_id']
         story_data['media_name'] = story['media_name']
-        story_data['num_sentences'] = len(mca.story(story['stories_id'], sentences=True)['story_sentences'])
+        story_data['num_sentences'] = sentences_in_story(story['stories_id'])
         story_url_csv.writerow(story_data)
         story_url_csv_file.flush()
         # now figure out how to save it
