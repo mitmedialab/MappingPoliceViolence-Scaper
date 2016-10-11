@@ -17,6 +17,17 @@ Analysis of police violence in 2013 and 2014 relies solely on the list of [unarm
 * 2015 spreadsheet: https://docs.google.com/spreadsheets/d/1HoG8jdioarEbxVI_IbuqRwQFCFqbUxzCHc6T2SymRUY/edit?usp=sharing
 * 2016 spreadsheet: https://docs.google.com/spreadsheets/d/19wsyttAqa4jbPnqmxQWbu79rwzp3eq_EHbzzsRiomTU/edit?usp=sharing
 
+Media sources
+------------------------
+We use the following sets of news sources provided in the Mediacloud database:
+
+* [8875027: US Mainstream Media](https://sources.mediacloud.org/#media-tag/8875027/details)
+* [2453107: US Regional Mainstream Media](https://sources.mediacloud.org/#media-tag/2453107/details)
+* [129: US Wire Services](https://sources.mediacloud.org/#media-tag/129/details)
+* [8878292: US Partisan Sources 2012 - Conservative](https://sources.mediacloud.org/#media-tag/8878292/details)
+* [8878293: US Partisan Sources 2012 - Liberal](https://sources.mediacloud.org/#media-tag/8878293/details)
+* [8878294: US Partisan Sources 2012 - Libertarian](https://sources.mediacloud.org/#media-tag/8878294/details)
+
 Measurement of media coverage
 -----------------------------
 We initially avoid examining type or tone, and examine only quantity of media coverage about each victim. For each victim, we retrieve from MediaCloud:
@@ -58,4 +69,4 @@ Population data for each city is manually retrieved from the US Census Bureau's 
 MPV has one case listed under "Liberty City" (a district of Miami) and one case listed under "Vermont Square" (a district of Los Angeles) -- for these cases we use the city for our analysis, and not the specific district.
 
 #### Multiple mentions
-What happens if a story mentions two or more victims? `list-all-stories.py` counts a story twice if it mentions two victims, but only if the story falls within the 2-week timeframe around both victims' deaths. So if a story about person A's recent death also mentions person B who died two months ago, that story is only included under person A, and not under person B.
+What happens if a story mentions two or more victims? `list-all-stories.py` counts a story twice if it mentions two victims, but only if the story falls within the specified timeframe around both victims' deaths. So if a story published today mentions person A who died two days ago, and person B who died last year, that story is only counted under person A. However, if a story published today mentions person A who died two days ago, and person C who died five days ago, the story is counted twice: once under person A and again under person C.
