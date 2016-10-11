@@ -10,7 +10,7 @@ There exist no 100% reliable lists of all victims of police violence, due to lac
 * [The Counted](http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database), by the Guardian, with data [here](http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted).
 * [Police Shootings](https://www.washingtonpost.com/graphics/national/police-shootings/), by the Washington Post, with data [here](https://github.com/washingtonpost/data-police-shootings).
 
-Analysis of police violence in 2013 and 2014 relies solely on the list of [unarmed black victims](http://mappingpoliceviolence.org/unarmed2014/) provided by MPV. Analysis of police violence in 2015 relies on a combined list from all three sources. Analysis of police violence in 2016 relies only on WaPo and Guardian data.
+Analysis of police violence in 2013 and 2014 relies solely on the list of [unarmed black victims](http://mappingpoliceviolence.org/unarmed2014/) provided by MPV. Analysis of police violence in 2015 relies on a combined list from all three sources. Analysis of police violence in 2016 relies only on WaPo and Guardian data. In sum we have included all victims killed between January 2013 and June 2016, inclusive.
 
 * 2013 spreadsheet: https://docs.google.com/spreadsheets/d/1ArisyAjhUE1eeuA490-rPPI1nfft2cJIyDpaeOBqyj8/edit?usp=sharing
 * 2014 spreadsheet: https://docs.google.com/spreadsheets/d/1699_rxlNIK3KSNzqpoczw0ehiwTp4IKEaEP_dfWo6vM/edit?usp=sharing
