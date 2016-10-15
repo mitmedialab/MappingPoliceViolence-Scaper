@@ -39,8 +39,16 @@ This timeframe is chosen because anecdotally, news coverage of an event often en
 
 After we generate a combined query, create a controversy object, and generate a list of stories and bit.ly counts for each story, we sample some random names in the generated `mpv-controversy-stories.csv` to check for unrelated stories, and manually remove those unrelated stories from the controversy.
 
-### Selecting data
+#### Multiple mentions
+What happens if a story mentions two or more victims? `list-all-stories.py` counts a story twice if it mentions two victims, but only if the story falls within the specified timeframe around both victims' deaths. So if a story published today mentions person A who died two days ago, and person B who died last year, that story is only counted under person A. However, if a story published today mentions person A who died two days ago, and person C who died five days ago, the story is counted twice: once under person A and again under person C.
 
+#### Normalization and deduplication
+If we want to make statements about how the quantity of news coverage about police violence has changed over time, we need to normalize the article counts against the total number of articles published by our media sources in the timeframe we're concerned with. 
+
+We also account for the fact that scraping news data is complicated and rarely results in perfect data. In particular, queries will often return the same story multiple times, resulting in overcounting. We do a simple URL check on each story about a victim to make sure that each unique story is only counted once. However, it's not practical to perform this check on every single story in the MediaCloud database, so this deduplication is not performed for the aggregate article counts used to normalize our data.
+
+Misc. data details
+------------------------------
 #### Definition of "unarmed"
 MPV codes victims as "unarmed" based on guidelines published [here](http://mappingpoliceviolence.org/aboutthedata/); most notably, they classify victims "holding a toy weapon" as unarmed. This is a discrepancy from both the Guardian and WaPo; the Guardian distinguishes between codings of "unarmed" and "non-lethal firearm", while WaPo distinguishes between "unarmed" and "toy weapon". The decision of whether victims holding toy weapons should be classified as "armed" or "unarmed" is both unobvious and political. Our list includes all black victims coded by our sources in the categories below, and we include the original codings in our spreadsheets.
 
@@ -67,6 +75,3 @@ For all other data about each person/incident (age, gender, signs of mental illn
 Population data for each city is manually retrieved from the US Census Bureau's [American FactFinder](http://factfinder.census.gov/faces/nav/jsf/pages/community_facts.xhtml) tool. If the listed city is unavailable, we use Wikipedia. If Wikipedia does not provide the information, we estimate population using the city's zip code(s).
 
 MPV has one case listed under "Liberty City" (a district of Miami) and one case listed under "Vermont Square" (a district of Los Angeles) -- for these cases we use the city for our analysis, and not the specific district.
-
-#### Multiple mentions
-What happens if a story mentions two or more victims? `list-all-stories.py` counts a story twice if it mentions two victims, but only if the story falls within the specified timeframe around both victims' deaths. So if a story published today mentions person A who died two days ago, and person B who died last year, that story is only counted under person A. However, if a story published today mentions person A who died two days ago, and person C who died five days ago, the story is counted twice: once under person A and again under person C.
