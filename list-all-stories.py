@@ -47,11 +47,15 @@ def fetch_all_stories(solr_query, solr_filter=''):
     log.info('  Retrieved {0} stories for query {1}'.format(len(all_stories), solr_query))
     return all_stories
     
-# get facebook shares for all the stories in the topic
+# get facebook share data for all the stories in the topic
 @cache
 def fetch_share_counts(tid, continueid):
-    storybatch = mca.topicStoryList(tid, limit=500, link_id = continueid)
-    shares = [(s['stories_id'], s['facebook_share_count']) for s in storybatch['stories']]
+    storybatch = mca.topicStoryListFacebookData(tid, limit=500, link_id = continueid)
+
+    shares = [(s['stories_id'], 
+              (s['facebook_share_count'], s['facebook_comment_count'], s['facebook_api_collect_date'])) 
+              for s in storybatch['counts']]
+
     continuation = storybatch['link_ids'] # for paging through results
     return shares, continuation
 
@@ -85,7 +89,8 @@ def sentences_in_story(storyid):
 story_url_csv_file = open(os.path.join(dest_dir,'mpv-controversy-stories.csv'), 'wb') # use 'wb' for windows, 'w' otherwise
 
 fieldnames = ['full_name', 'first_name', 'last_name', 'sex', 'date_of_death', 'age', 'city', 'state', 'cause', 'population', 
-              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'url', 'num_sentences' ]
+              'story_date', 'stories_id', 'media_id','media_name', 'bitly_click_count', 'facebook_share_count', 'facebook_comment_count',
+              'facebook_api_collect_date', 'url', 'num_sentences' ]
 story_url_csv = unicodecsv.DictWriter(story_url_csv_file, fieldnames = fieldnames, 
     extrasaction='ignore', encoding='utf-8')
 story_url_csv.writeheader()
@@ -154,7 +159,9 @@ for person in data:
         story_data['stories_id'] = story['stories_id']
         story_data['url'] = story['url']
         story_data['bitly_click_count'] = story['bitly_click_count']
-        story_data['facebook_share_count'] = fbshares[int(story['stories_id'])]
+        story_data['facebook_share_count'] = fbshares[int(story['stories_id'])][0]
+        story_data['facebook_comment_count'] = fbshares[int(story['stories_id'])][1]
+        story_data['facebook_api_collect_date'] = fbshares[int(story['stories_id'])][2]
         story_data['media_id'] = story['media_id']
         story_data['media_name'] = story['media_name']
         story_data['num_sentences'] = sentences_in_story(story['stories_id'])

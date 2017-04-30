@@ -40,7 +40,7 @@ Run mc.storyCount() on the giant query in the `data/YEAR/query-with-names.txt` f
 
 ### 3. Generate the Outputs
 
-Run `list-all-stories.py` to generate a list of all the stories in the topic we created (`data/YEAR/mpv-controversy-stories.csv`) and totals by victim (`data/YEAR/mpv-controversy-story-counts.csv`). This took about 25 minutes for me. Manually check some random names in the spreadsheet to ensure that the stories are on-topic, and remove the necessary story ids from the topic in the Topic Mapper tool. Once the topic is regenerated, run `list-all-stories.py` again to generate clean story data.
+Run `list-all-stories.py` to generate a list of all the stories in the topic we created (`data/YEAR/mpv-controversy-stories.csv`) and totals by victim (`data/YEAR/mpv-controversy-story-counts.csv`). This took about 25 minutes for me, but it could take less or more time depending on the size of the topic. Manually check some random names in the spreadsheet to ensure that the stories are on-topic, and remove the necessary story ids from the topic in the Topic Mapper tool. Once the topic is regenerated, run `list-all-stories.py` again to generate clean story data.
 
 Run `count-coverage.py` to generate the attention over time data, saved to `data/YEAR/mpv-sentences-over-time.csv`. This takes a few seconds.
 
