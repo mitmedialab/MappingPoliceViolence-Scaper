@@ -1,0 +1,295 @@
+---
+title: "Black Lives Matter Media Analysis"
+author: "J. Nathan Matias ([blog](https://civic.mit.edu/blog/natematias)) ([/u/natematias](https://reddit.com/u/natematias)) ([twitter](https://twitter.com/natematias))."
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+    html_document:
+        toc: true
+        depth: 4  # upto four depths of headings (specified by #, ## and ###)
+        number_sections: false  ## if you want number sections at each table header
+        theme: spacelab  # many options for theme, this one is my favorite.
+        highlight: tango  # specifies the syntax highlighting style
+        code_folding: hide
+---
+
+```{r analysis, include=FALSE, cache=TRUE, cache.extra=file.info('full-analysis-BLM-paper.RData')}
+knitr::opts_chunk$set(echo=TRUE)
+load('full-analysis-BLM-paper.RData')
+
+library(texreg)
+library(stargazer)
+library(ggplot2)
+library(descr)
+library(texreg)
+library(pander)
+panderOptions('digits', 2)
+panderOptions('round', 2)
+panderOptions('keep.trailing.zeros', TRUE)
+```
+
+## Hypotheses
+*H1. CHANCE OF COVERAGE*: Unarmed black people killed by the police received more coverage in the news after the death of Michael Brown, a change declined over time.
+
+* H1A. The chance that an unarmed black person killed by the police would receive at least one news story about them increased after the death of Michael Brown.
+
+* H1B. The incidence rate of news stories published about an unarmed black person killed by the police increased after the death of Michael Brown and declined from that point onward.
+
+*H2. FRAMING*: News stories about unarmed black people killed by the police were more likely to frame those deaths in terms of a systemic issue, as measured by the number of other previous deaths mentioned in the article.
+
+* H2A: The chance that an article mentioned at least one other victim increased after the death of Michael Brown
+
+* H2B: The incidence rate of articles framed as a systemic issue increased after the death of Michael Brown and declined from that point onward
+
+*H3. ATTENTION:* (TODO)
+
+
+## Data Collection
+(TODO: describe the MediaCloud process) (draw from Allan Ko's documentation)
+
+The dataset of unarmed black people killed by the police or who died in police custody (people) includes a total of `r total.people` people killed from `r strftime(min(people$date), "%b %d, %Y")` to `r strftime(max(people$date), "%b %d, %Y")`. Within this dataset, Michael Brown's death occurred on `r strftime(brown.day.date , "%b %d, %Y")`, the `r brown.day.num`th day in the dataset. After removing Michael Brown and any people killed in the 14 day period before and including the day of his death, our dataset includes `r nrow(people)` people.
+
+In our analysis of media coverage received by people's deaths (H1), our dependent variable is the number of articles about a victim in the 14 days after their death. We also observe the binary measure of whether the victim was mentioned in any articles in our sample during the same period. ince MediaCloud may collect varying percentages of the available articles, and since the output of articles by publishers varies over time, we normalize this measure by dividing the raw by the number of articles observed on MediaCloud that day
+ 
+<!--In our analysis of social media attention received by articles about people's deaths (H3), our dependent variable is the number of Facebook likes and shares received by articles published in the 14 day period after their death.  -->
+
+<center><div style="width:80%; text-align:left">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+ggplot(people, aes(x = day.num, y=log1p(normalized.stories))) +
+  geom_vline(xintercept=c(brown.day.num), linetype="dashed", size=2, color="gray") +
+  geom_point(data=subset(people, day.num<(brown.day.num-14)), aes(color="gray40"), shape=10, size=4) +
+  geom_point(data=subset(people, day.num>brown.day.num), aes(color="red"), shape=10, size=4) +
+  ylab("ln Normalized Number of Stories") +
+  ylim(0,8) +
+  scale_x_continuous(name ="",breaks=c(0,365,730,1095),
+                     labels=c("2013", "2014", "2015", "2016")) +
+  scale_colour_manual(name = 'Time Period', 
+                      values =c('gray40'='gray40','red'='#E95556'), labels = c('Before','After')) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+```
+</div></center>
+
+
+<center><div style="width:50%; text-align:left">
+```{r echo=TRUE, warning = FALSE}
+pander(CrossTable(people$after.brown,people$any.articles,
+           expected=FALSE, prop.r=TRUE, prop.c=FALSE,
+           prop.t=FALSE, prop.chisq=FALSE, digits = 1))
+```
+</div></center>
+
+<!--
+<center><div style="width:80%; text-align:left">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+ggplot(people, aes(factor(after.brown), log1p(normalized.stories), label = full_name, fill=factor(after.brown))) + 
+  scale_fill_manual(name="Time Period", values=c("#999999", "#E95556"), 
+                    labels=c("Before", "After")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=14),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16)) +
+  ylim(0,9) +
+  ylab("ln Number of Stories") +
+  scale_x_discrete("Time Period", labels = c("Before Michael Brown's Death","After Michael Brown's Death")) +
+  geom_violin() +
+  geom_jitter(width=0.5, shape=10, size=4, color="gray40")
+  # + geom_text(data=labelpeople, size=7)
+```
+</div></center>-->
+
+Within the dataset of people, we also observe the number of days that elapsed since the first observation in the dataset (day.num), as well as whether a person was killed in the period after Michael Brown's death (after.brown). We record the male or female gender of the victim, as reported in the news articles, their age, and the log-transformed population of the metropolitan area where the person was killed (ln.population). <!--We also control for the mean number of days that elapsed between article publication and when we sampled the Facebook shares and likes.-->
+
+The dataset of stories about unarmed black people killed by the police (stories) includes `r prettyNum(nrow(stories), big.mark=',')` stories. Stories are included in the dataset if (LIST OTHER CRITERIA), if at least one of the people they mention was killed by the police within the two week period before the story was published. Since many people killed within a two week period also appeared in the same articles, we associate each article with the person who was most recently killed at the time the article was published. The dataset omits `r stories.removed.michael.brown` stories about Michael Brown.
+
+In our story-level analysis (H2), our dependent variable is the count of sentences in the story that mention at least one prior victim in the dataset (sentences.about.others), as well as a binary measure of whether any sentence in the article mentioned any other prior victim (wider.issue).
+
+
+
+<center><div style="width:80%">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+ggplot(stories, aes(x = story.day.num, y=log1p(sentences.about.others))) +
+  geom_vline(xintercept=c(brown.day.num), linetype="dashed", size=2, color="gray") +
+  geom_point(data=subset(stories, story.day.num<(brown.day.num-14)), aes(color="gray40"), shape=10, size=4) +
+  geom_point(data=subset(stories, story.day.num>brown.day.num), aes(color="red"), shape=10, size=4) +
+  ylab("ln Sentences About Other Victims") +
+  ylim(0,8) +
+  scale_x_continuous(name ="",breaks=c(0,365,730,1095),
+                     labels=c("2013", "2014", "2015", "2016")) +
+  scale_colour_manual(name = 'Time Period', 
+                      values =c('gray40'='gray40','red'='#E95556'), labels = c('Before','After')) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+```
+</div></center>
+
+
+<center><div style="width:50%; text-align:left">
+
+```{r echo=TRUE, warning = FALSE}
+pander(CrossTable(stories$after.brown,stories$wider.issue,
+                  expected=FALSE, prop.r=TRUE, prop.c=FALSE,
+                  prop.t=FALSE, prop.chisq=FALSE, digits = 1))
+```
+</div></center>
+
+
+## Findings
+
+### Chance of News Coverage
+To test the hypothesis of an increase in news coverage after the death of Michael Brown, we use a logistic regression model to estimate the chance that a person killed by the police or who died in their custody would have at least one article mention their name. To improve the precision of our estimate of the difference, we include regression adjustments for the gender of the person as reported in the news, their reported age, and the population of metropolitan area where their death occurred. 
+
+We find that in the `r michael.brown.day.num` days before Michael Brown's death, a `r sprintf("%1.0f", mean(people$age))` year old black male killed by the police in a city with the median population had a `r sprintf("%1.2f", subset(data.h1a, after.brown==0)$dv*100)`% chance of having at least one article published about them, on average. In the `r max(people$day.num) - michael.brown.day.num` days after Brown's death, a similar person had a `r sprintf("%1.2f", subset(data.h1a, after.brown==1)$dv*100)`% chance of having an article published about them on average, a statistically-significant difference of `r sprintf("%1.2f", subset(data.h1a, after.brown==1)$dv*100 - subset(data.h1a, after.brown==0)$dv*100)` percentage pionts (p=`r sprintf("%1.5f",summary(h1a)$coefficients['after.brown',]['Pr(>|z|)'])`).
+
+<center><div style="width:50%">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+
+ggplot(data.h1a, aes(factor(after.brown), dv)) +
+  geom_bar(stat="identity", fill='gray90') +
+  ylab("Fitted Probability of Having 1+ Stories") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_text(aes(label=sprintf("%1.2f%%", 100*dv)), vjust=1.5, hjust=1.4, 
+            size=7, color="gray40", fontface="bold") +
+  scale_x_discrete("", labels = c("Before Michael Brown's Death","After Michael Brown's Death")) +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width=0.1) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+```
+</center></div>
+
+<center><div style="width:50%; text-align:left">
+
+```{r echo=TRUE, warning = FALSE, results = 'asis'}
+htmlreg(h1a, digits=3, label="table:comment.effect", 
+          custom.model.names=c("Modeling Chance of Coverage"),
+          custom.coef.names = c("Intercept", "Age", 
+                                "Gender (Male)","ln Population", "After Brown's Death"),
+          caption="Using a logistic regression, we find that in the period after Michael Brown's death, an unarmed black person killed by the police had a 24.9 percentage point greater chance of having at least one article published about them.", star.symbol = "\\*",
+          inline.css = TRUE, doctype = FALSE, html.tag = FALSE, head.tag = FALSE, body.tag = FALSE)
+
+```
+</center></div>
+
+### Incidence Rate of News Coverage
+We also test the hypothesis of an increase in the incidence rate of coverage of black people killed by the police, one that declines over time. To test this hypothesis, we use a negative binomial model that predicts the incidence rate of the normalized number of articles published about a person in the 14 day period after their death (Long, J. Scott). In the model, we test the hypothesis of a cubic relationship between the day count and the incidence rate, controlling for age, gender, and population:
+
+(TODO: formula)
+
+In the model of stories per person (Table N), we find that the incidence rate increased to a maximum rate between `r sprintf("%1.0f", subset(data.h1b, day.num==data.h1b.max.fitted.day)$upr)` and `r sprintf("%1.0f", max(data.h1b$lwr))` at a time `r data.h1b.max.fitted.day - michael.brown.day.num` days after Michael Brown's death. After this day, the rate declined on average. By the end of our observation period, the incidence rate of stories has declined to the point that 95% confidence intervals overlap with thase at the beginning of our sample, and the difference between them is not statistically-significant.
+
+<center><div style="width:70%">
+```{r fig.width=9, fig.height=4, echo=TRUE, warning = FALSE}
+ggplot(data.h1b, aes(x = day.num, y=dv)) +
+  geom_vline(xintercept=c(brown.day.num), linetype="dashed", size=1, color="gray") +
+  geom_line(data=subset(data.h1b, day.num<(brown.day.num-14)),size = 1, aes(color="gray40")) +
+  geom_line(data=subset(data.h1b, day.num>brown.day.num),size = 1, aes(color="red")) +
+  geom_ribbon(aes(ymin=data.h1b$lwr, ymax=data.h1b$upr), alpha=0.1) +
+  #  geom_point(data=people,aes(x=people$day.num, y=people$num_articles), alpha=.9, position=position_jitter(h=.2), color="red") +
+  #  geom_text(data=people,aes(label=name), size=3, alpha=0.8) + 
+  #  geom_vline(xintercept=c(221,235), linetype="dotted") +
+  ylab("Incidence Rate of Stories") +
+  ylim(0,160) +
+  scale_x_continuous(name ="",breaks=c(0,365,730,1095),
+                     labels=c("2013", "2014", "2015", "2016")) +
+  scale_colour_manual(name = 'Time Period', 
+                      values =c('gray40'='gray40','red'='#E95556'), labels = c('Before','After')) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+
+```
+</div></center>
+
+<pre>
+<!-- unsure the reason HTMLreg isn't properly outputting stars properly -->
+==============================================
+                Modeling The Number of Stories
+----------------------------------------------
+Intercept         -2.15938210                 
+                  (1.33850703)                
+Age               -0.01914038                 
+                  (0.01242676)                
+Gender (Male)     -1.09219328 *               
+                  (0.54972044)                
+ln Population      0.38859221 ***             
+                  (0.06867225)                
+Day Number        -0.00323040                 
+                  (0.00466222)                
+Day Number^2       0.00002165 **              
+                  (0.00000793)                
+Day Number^3      -0.00000001 ***             
+                  (0.00000000)                
+----------------------------------------------
+AIC             2004.01066660                 
+BIC             2034.47580652                 
+Log Likelihood  -994.00533330                 
+Deviance         321.98734229                 
+Num. obs.        333                          
+==============================================
+*** p < 0.001, ** p < 0.01, * p < 0.05
+</pre>
+
+### Chance of Including A Wider Frame
+To test the hypothesis of a change in the framing of stories after the death of Michael Brown, we use a logistic regression model to estimate the chance of a story to include a mention of at least one other person. To improve the precision of our estimate of the difference, we include regression adjustments for the gender of the person as reported in the news, their reported age, and the population of metropolitan area where their death occurred.
+
+In a logistic regression mode on the `r prettyNum(nrow(stories), big.mark=',')` stories in our sample, in the `r michael.brown.day.num` days before Michael Brown's death, we find that for an unarmed, `r sprintf("%1.0f", mean(people$age))` year old black male killed by the police in a city of median size, a story had a `r sprintf("%1.2f", subset(data.h2a, after.brown==0)$dv*100)`% chance of mentioning a previous victim on average. In the `r max(stories$death.day.num)- michael.brown.day.num` days after Michael Brown's death, a similar story had a `r sprintf("%1.2f", subset(data.h2a, after.brown==1)$dv*100)`% chance of including at least one mention of another victim on average, an estimated difference of `r sprintf("%1.2f", subset(data.h2a, after.brown==1)$dv*100 - subset(data.h2a, after.brown==0)$dv*100)` percentage points.
+
+<center><div style="width:50%">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+
+ggplot(data.h2a, aes(factor(after.brown), dv)) +
+  geom_bar(stat="identity", fill='gray90') +
+  ylab("Fitted Probability of Including 1+ Others") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_text(aes(label=sprintf("%1.2f%%", 100*dv)), vjust=1.5, hjust=1.4, 
+            size=7, color="gray40", fontface="bold") +
+  scale_x_discrete("", labels = c("Before Michael Brown's Death","After Michael Brown's Death")) +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width=0.1) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+```
+</center></div>
+
+<center><div style="width:50%; text-align:left">
+```{r echo=TRUE, warning = FALSE, results = 'asis'}
+htmlreg(h2a, digits=3, label="table:comment.effect", 
+          custom.model.names=c("Logistic Regression"),
+          custom.coef.names = c("Intercept", "Age", 
+                                "Gender (Male)","ln Population", "After Brown's Death"),
+          caption="In the period after Michael Brown's death, a story about an unarmed black person killed by the police had an 18.27 percentage point greater chance of including a mention of at least one other victim, on average",
+          star.symbol = "\\*", inline.css = TRUE, doctype = FALSE, 
+          html.tag = FALSE, head.tag = FALSE, body.tag = FALSE)
+```
+</center></div>

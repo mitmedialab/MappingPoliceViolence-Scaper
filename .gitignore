@@ -6,3 +6,7 @@ cache
 *.pyc
 app.config
 client_secret.json
+.Rproj.user
+*.Rdata
+*.Rhistory
+*.Rproj
