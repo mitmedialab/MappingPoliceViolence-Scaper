@@ -151,7 +151,9 @@ pander(CrossTable(stories$after.brown,stories$wider.issue,
 
 ## Findings
 
-### Chance of News Coverage
+### Changes in News Coverage
+
+#### Chance of News Coverage
 To test the hypothesis of an increase in news coverage after the death of Michael Brown, we use a logistic regression model to estimate the chance that a person killed by the police or who died in their custody would have at least one article mention their name. To improve the precision of our estimate of the difference, we include regression adjustments for the gender of the person as reported in the news, their reported age, and the population of metropolitan area where their death occurred. 
 
 We find that in the `r michael.brown.day.num` days before Michael Brown's death, a `r sprintf("%1.0f", mean(people$age))` year old black male killed by the police in a city with the median population had a `r sprintf("%1.2f", subset(data.h1a, after.brown==0)$dv*100)`% chance of having at least one article published about them, on average. In the `r max(people$day.num) - michael.brown.day.num` days after Brown's death, a similar person had a `r sprintf("%1.2f", subset(data.h1a, after.brown==1)$dv*100)`% chance of having an article published about them on average, a statistically-significant difference of `r sprintf("%1.2f", subset(data.h1a, after.brown==1)$dv*100 - subset(data.h1a, after.brown==0)$dv*100)` percentage pionts (p=`r sprintf("%1.5f",summary(h1a)$coefficients['after.brown',]['Pr(>|z|)'])`).
@@ -191,7 +193,7 @@ htmlreg(h1a, digits=3, label="table:comment.effect",
 ```
 </center></div>
 
-### Incidence Rate of News Coverage
+#### Incidence Rate of News Coverage
 We also test the hypothesis of an increase in the incidence rate of coverage of black people killed by the police, one that declines over time. To test this hypothesis, we use a negative binomial model that predicts the incidence rate of the normalized number of articles published about a person in the 14 day period after their death (Long, J. Scott). In the model, we test the hypothesis of a cubic relationship between the day count and the incidence rate, controlling for age, gender, and population:
 
 (TODO: formula)
@@ -255,7 +257,9 @@ Num. obs.        333
 *** p < 0.001, ** p < 0.01, * p < 0.05
 </pre>
 
-### Chance of Including A Wider Frame
+### Frame Changes
+
+#### Chance of Including A Wider Frame
 To test the hypothesis of a change in the framing of stories after the death of Michael Brown, we use a logistic regression model to estimate the chance of a story to include a mention of at least one other person. To improve the precision of our estimate of the difference, we include regression adjustments for the gender of the person as reported in the news, their reported age, and the population of metropolitan area where their death occurred.
 
 In a logistic regression mode on the `r prettyNum(nrow(stories), big.mark=',')` stories in our sample, in the `r michael.brown.day.num` days before Michael Brown's death, we find that for an unarmed, `r sprintf("%1.0f", mean(people$age))` year old black male killed by the police in a city of median size, a story had a `r sprintf("%1.2f", subset(data.h2a, after.brown==0)$dv*100)`% chance of mentioning a previous victim on average. In the `r max(stories$death.day.num)- michael.brown.day.num` days after Michael Brown's death, a similar story had a `r sprintf("%1.2f", subset(data.h2a, after.brown==1)$dv*100)`% chance of including at least one mention of another victim on average, an estimated difference of `r sprintf("%1.2f", subset(data.h2a, after.brown==1)$dv*100 - subset(data.h2a, after.brown==0)$dv*100)` percentage points.
@@ -291,5 +295,54 @@ htmlreg(h2a, digits=3, label="table:comment.effect",
           caption="In the period after Michael Brown's death, a story about an unarmed black person killed by the police had an 18.27 percentage point greater chance of including a mention of at least one other victim, on average",
           star.symbol = "\\*", inline.css = TRUE, doctype = FALSE, 
           html.tag = FALSE, head.tag = FALSE, body.tag = FALSE)
+```
+</center></div>
+
+#### Incidence Rate of Including Other Names
+We also test the frame-change hypothesis by estimating changes in the incidence rate of mentions of other victims in stories, expecting that the rate would increase after the death of Michael Brown and declines over time. To test this hypothesis, we use a negative binomial model that predicts the incidence rate of sentences mentioning other victims, for stories published about a person in the 14 day period after their death (Long, J. Scott). In the model, we test the hypothesis of a cubic relationship between the day count and the incidence rate, as well as a change in that relationship after the death of Michael Brown, controlling for age, gender, and population:
+
+(include model formula here)
+
+In the model of stories per person (Table below), we find that the incidence rate of other victims mentioned in stories did increase after the death of Michael Brown to an estimate between `r sprintf("%1.2f", subset(data.h2b, dv==max(data.h2b$dv))$lwr)` and `r sprintf("%1.2f", subset(data.h2b, dv==max(data.h2b$dv))$upr)`. The rate then declined on average after Michael Brown's death. By the end of our observation period, the incidence rate had declined to an estimated value of `r sprintf("%1.2f", subset(data.h2b, story.day.num==max(data.h2b$story.day.num))$dv)`, which was still greater than the incidence rate of `r sprintf("%1.2f", subset(data.h2b, story.day.num==0)$dv)` at the beginning of the observation period, a difference that is statistically-significant.
+
+<center><div style="width:50%">
+```{r fig.width=9, fig.height=5, echo=TRUE, warning = FALSE}
+
+ggplot(data.h2b, aes(x = story.day.num, y=dv)) +
+  geom_vline(xintercept=c(brown.day.num), linetype="dashed", size=1, color="gray") +
+  geom_line(data=subset(data.h2b, story.day.num<(brown.day.num)),size = 1, aes(color="gray40")) +
+  geom_line(data=subset(data.h2b, story.day.num>brown.day.num),size = 1, aes(color="red")) +
+  geom_ribbon(aes(ymin=data.h2b$lwr, ymax=data.h2b$upr), alpha=0.1) +
+  #  geom_point(data=people,aes(x=people$day.num, y=people$num_articles), alpha=.9, position=position_jitter(h=.2), color="red") +
+  #  geom_text(data=people,aes(label=name), size=3, alpha=0.8) + 
+  #  geom_vline(xintercept=c(221,235), linetype="dotted") +
+  ylab("Incidence Rate of Mentions") +
+  scale_x_continuous(name ="",breaks=c(0,365,730,1095),
+                     labels=c("2013", "2014", "2015", "2016")) +
+  scale_colour_manual(name = 'Time Period', 
+                      values =c('gray40'='gray40','red'='#E95556'), labels = c('Before','After')) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line.x = element_line(size=1, colour = "black"),
+        axis.line.y = element_line(size=1, colour = "black"), axis.ticks = element_line(size=1),
+        axis.ticks.length = unit(.15, "cm"), 
+        axis.text=element_text(size=16),
+        axis.title=element_text(size=18,face="bold"),
+        legend.title = element_text(colour="black", size=18, face="bold"),
+        legend.text = element_text(colour="black", size = 16))
+```
+
+
+<center><div style="width:50%; text-align:left">
+```{r echo=TRUE, warning = FALSE, results = 'asis'}
+
+htmlreg(h2b.model, digits=3, label="table:comment.effect", 
+          custom.model.names=c("Modeling Change in Framing"),
+          custom.coef.names = c("Intercept", "Age", 
+                                "Gender (Male)","ln Population", "After Brown's Death",
+                                "Story Day",  "Story Day ^2", "Story Day ^3",
+                                "After Brown x Story Day",
+                                "After Brown x Story Day ^2",
+                                "After Brown x Story Day ^3"),
+          caption="In the period after Michael Brown's Death, stories mentioned other victims at greater rates, a difference that declined but persisted over time.")
 ```
 </center></div>

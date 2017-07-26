@@ -338,16 +338,34 @@ screenreg(h2a, digits=3, label="table:comment.effect",
 ### H2B: Change in incidence rate of sentences mentioning other people  ##
 ##########################################################################
 
-summary(h2b.model <- glm.nb(sentences_mentioning_prior_victims ~ gender + ln.population + death.day.num + I(death.day.num^2) + after.brown + after.brown:death.day.num, data=stories))
-summary(h2b.model <- glm.nb(sentences_mentioning_prior_victims ~ gender + ln.population + death.day.num + I(death.day.num^2) + I(death.day.num^3), data=stories))
+#summary(h2b.model <- glm.nb(sentences_mentioning_prior_victims ~ gender + ln.population + story.day.num + I(story.day.num^2), data=stories))
+summary(h2b.base <- glm.nb(sentences_mentioning_prior_victims ~ 1, data=stories))
+summary(h2b.model <- glm.nb(sentences_mentioning_prior_victims ~ gender + age + ln.population + after.brown + 
+                              story.day.num + after.brown:story.day.num +
+                              I(story.day.num^2) + after.brown:I(story.day.num^2) + 
+                              I(story.day.num^3) + after.brown:I(story.day.num^3), data=stories))
 
 
-data.h2b = data.frame(death.day.num = seq(min(people$day.num), max(people$day.num), 1))
-data.h2b$after.brown <- as.integer(data.h2b$death.day.num > michael.brown.day.num)
+screenreg(h2b.model, digits=3, label="table:comment.effect", 
+          custom.model.names=c("Modeling Change in Framing"),
+          custom.coef.names = c("Intercept", "Age", 
+                                "Gender (Male)","ln Population", "After Brown's Death",
+                                "Story Day",  "Story Day ^2", "Story Day ^3",
+                                "After Brown x Story Day",
+                                "After Brown x Story Day ^2",
+                                "After Brown x Story Day ^3"),
+          caption="In the period after Michael Brown's Death, stories mentioned other victims at greater rates, a difference that declined but persisted over time.")
+
+
+
+
+data.h2b = data.frame(story.day.num = seq(min(people$day.num), max(people$day.num), 1))
+data.h2b$after.brown <- as.integer(data.h2b$story.day.num > michael.brown.day.num)
 data.h2b$age = mean(people$age)
 data.h2b$gender = "Male"
 data.h2b$ln.population = log1p(median(people$population))
 h2b.predictions <- predict(h2b.model, newdata=data.h2b, type="link",conf.int=TRUE, se.fit=TRUE)
+data.h2b$log_dv <- h2b.predictions$fit
 data.h2b$log_upr <- h2b.predictions$fit + (critval * h2b.predictions$se.fit)
 data.h2b$log_lwr <- h2b.predictions$fit - (critval * h2b.predictions$se.fit)
 data.h2b$dv  <- h2b.model$family$linkinv(h2b.predictions$fit)
@@ -356,16 +374,15 @@ data.h2b$lwr <- h2b.model$family$linkinv(data.h2b$log_lwr)
 
 
 
-ggplot(data.h2b, aes(x = death.day.num, y=dv)) +
+ggplot(data.h2b, aes(x = story.day.num, y=dv)) +
   geom_vline(xintercept=c(brown.day.num), linetype="dashed", size=1, color="gray") +
-  geom_line(data=subset(data.h2b, death.day.num<(brown.day.num-14)),size = 1, aes(color="gray40")) +
-  geom_line(data=subset(data.h2b, death.day.num>brown.day.num),size = 1, aes(color="red")) +
+  geom_line(data=subset(data.h2b, story.day.num<(brown.day.num)),size = 1, aes(color="gray40")) +
+  geom_line(data=subset(data.h2b, story.day.num>brown.day.num),size = 1, aes(color="red")) +
   geom_ribbon(aes(ymin=data.h2b$lwr, ymax=data.h2b$upr), alpha=0.1) +
   #  geom_point(data=people,aes(x=people$day.num, y=people$num_articles), alpha=.9, position=position_jitter(h=.2), color="red") +
   #  geom_text(data=people,aes(label=name), size=3, alpha=0.8) + 
   #  geom_vline(xintercept=c(221,235), linetype="dotted") +
   ylab("Incidence Rate of Mentions") +
-#  ylim(0,160) +
   scale_x_continuous(name ="",breaks=c(0,365,730,1095),
                      labels=c("2013", "2014", "2015", "2016")) +
   scale_colour_manual(name = 'Time Period', 
